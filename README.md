@@ -9,6 +9,9 @@ e os documentos ficam em uma pasta no Google Drive.
    `docs`, `agenda`, `tarefas` e `fin`.
    - Adicione também a aba `user` com as colunas `email` e `senha` para definir
      quem pode acessar o sistema.
+   - Na aba `clientes`, utilize as colunas `id`, `nome`, `email`, `fone` e
+     `notas` exatamente nesses nomes (em letras minúsculas). O script considera
+     os cabeçalhos em minúsculas para salvar e ler os dados.
 2. Crie uma pasta no Google Drive para os arquivos enviados.
 3. Edite `Code.gs` e preencha as constantes `SPREADSHEET_ID` e
    `DOCS_FOLDER_ID` com os IDs correspondentes.
