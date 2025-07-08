@@ -1,0 +1,2189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Jurídico Completo</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/727/727399.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --cor-vinho: #5D1A2A;
+            --cor-dourado: #D4AF37;
+            --cor-dourado-hover: #c09b2d;
+            --cor-bege-claro: #F3EAD3;
+            --cor-bege-fundo: #EFEBE0;
+            --cor-texto-escuro: #3d2c21;
+            --main: var(--cor-vinho);
+            --accent: var(--cor-dourado);
+            --accent-light: var(--cor-bege-claro);
+            --danger: #ef4444;
+            --success: #10b981;
+            --info: #0ea5e9;
+            --warning: #f59e0b;
+            --bg: var(--cor-bege-fundo);
+            --white: #ffffff;
+            --border: #ddd3bb;
+            --dark-text: var(--cor-texto-escuro);
+            --muted-text: #8c7a6b;
+            --radius: 1rem;
+            --shadow: 0 4px 18px rgba(0, 0, 0, .08);
+            --transition: .2s ease-in-out;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--dark-text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            background: var(--main);
+            color: var(--white);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            gap: 1.5rem;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--cor-bege-claro);
+            flex-shrink: 0;
+        }
+
+        nav {
+            flex-grow: 1;
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        nav button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(243, 234, 211, 0.3);
+            color: var(--cor-bege-claro);
+            padding: .6rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: .7rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        nav button:hover {
+            background: var(--cor-dourado);
+            border-color: var(--cor-dourado-hover);
+            color: var(--cor-texto-escuro);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        nav button.active {
+            background: var(--cor-dourado);
+            border-color: var(--cor-dourado);
+            color: var(--cor-texto-escuro);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        nav button:active {
+            transform: scale(0.97);
+            transition: transform .1s ease;
+        }
+
+        header>button.btn {
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: var(--cor-texto-escuro);
+            border: none;
+            padding: .75rem 1.5rem;
+            font-size: .95rem;
+            font-weight: 600;
+            border-radius: .7rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--cor-dourado-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, .3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, .4);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, .4);
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: var(--white);
+        }
+
+        .btn-info:hover {
+            background: #0284c7;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, .4);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn .4s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-header {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .filter-bar input,
+        .filter-bar select {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: .9rem 1rem;
+            font-size: .98rem;
+            border: 1.5px solid var(--border);
+            border-radius: .65rem;
+            background: var(--cor-bege-claro);
+            transition: all var(--transition);
+            font-family: 'Inter', sans-serif;
+            color: var(--cor-texto-escuro);
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px #c09b2d55;
+            outline: none;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: .5rem;
+            font-size: .9rem;
+        }
+
+        #login-panel {
+            max-width: 400px;
+            margin: 10vh auto;
+            background: var(--cor-bege-claro);
+            border-radius: var(--radius);
+            padding: 3rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        #login-panel h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--main);
+        }
+
+        #login-erro {
+            color: var(--danger);
+            margin-top: 1rem;
+            font-size: .9rem;
+            display: none;
+        }
+
+        #painel-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        #resumo-financeiro.painel-cards {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        #resumo-financeiro.painel-cards .card {
+            flex: 0 1 260px;
+            min-width: 220px;
+        }
+
+        .card {
+            background: var(--cor-bege-claro);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+            transition: all var(--transition);
+            border: 1px solid #ddd3bb;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, .1);
+            border-color: var(--accent);
+        }
+
+        .card .icon {
+            font-size: 1.8rem;
+            color: var(--main);
+        }
+
+        .card .value {
+            font-size: 2.2rem;
+            font-weight: 800;
+        }
+
+        .card .label {
+            color: var(--muted-text);
+            font-weight: 500;
+        }
+
+        .chart-container {
+            background: var(--cor-bege-claro);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2.5rem;
+        }
+
+        #painel-prazos ul {
+            list-style: none;
+            padding: 1rem 0;
+        }
+
+        #painel-prazos li {
+            background: var(--accent-light);
+            padding: .8rem 1.2rem;
+            border-radius: .8rem;
+            margin-bottom: .5rem;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            background: var(--cor-bege-claro);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 1rem 1.2rem;
+            text-align: left;
+            font-size: .95rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: transparent;
+            color: var(--muted-text);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: .8rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: var(--cor-bege-fundo);
+        }
+
+        td .actions {
+            display: flex;
+            gap: .5rem;
+        }
+
+        td .actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: var(--muted-text);
+            padding: .3rem;
+            transition: color var(--transition);
+        }
+
+        td .actions button:hover {
+            color: var(--accent);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: .3rem .8rem;
+            border-radius: 99px;
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--cor-texto-escuro);
+            text-align: center;
+        }
+
+        .badge.Ativo,
+        .badge.Agendado {
+            background: var(--accent);
+        }
+
+        .badge.Concluído,
+        .badge.Concluída,
+        .badge.Realizado,
+        .badge.Pago {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .badge.Arquivado,
+        .badge.Cancelado {
+            background: var(--muted-text);
+            color: var(--white);
+        }
+
+        .badge.Pendente,
+        .badge.Vencido {
+            background: var(--warning);
+        }
+
+        .badge.Alta {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .badge.Média {
+            background: var(--warning);
+        }
+
+        .badge.Baixa {
+            background: var(--info);
+            color: var(--white);
+        }
+
+        .badge.Receber {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .badge.Pagar {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .modal-bg {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(61, 44, 33, .5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            animation: fadeIn .3s;
+        }
+
+        .modal-bg.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--cor-bege-fundo);
+            border-radius: var(--radius);
+            padding: 2rem 2.5rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .1);
+            animation: scaleIn .3s;
+            border: 1px solid var(--border);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: var(--muted-text);
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-footer {
+            margin-top: 2rem;
+            text-align: right;
+        }
+
+        #notificacoes {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            width: 320px;
+        }
+
+        .notif {
+            background: var(--cor-bege-claro);
+            border-left: 5px solid var(--accent);
+            padding: 1rem 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            border-radius: .8rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .1);
+            margin-bottom: 1rem;
+            animation: slideIn .4s forwards;
+            transform: translateX(120%);
+            color: var(--cor-texto-escuro);
+        }
+
+        .notif.success {
+            border-left-color: var(--success);
+        }
+
+        .notif.danger {
+            border-left-color: var(--danger);
+        }
+
+        .notif i {
+            font-size: 1.4rem;
+            opacity: .8;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .cliente-card {
+            background: var(--cor-bege-claro);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .cliente-card h3 {
+            font-size: 1.4rem;
+            color: var(--main);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--cor-dourado);
+            padding-bottom: .5rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 4rem auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .calendar-container {
+            background: var(--cor-bege-claro);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* Estilos para o FullCalendar */
+        .fc .fc-button {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: var(--cor-texto-escuro);
+            text-transform: capitalize;
+            /* Garante que o texto dos botões seja capitalizado */
+        }
+
+        .fc .fc-button:hover {
+            background-color: var(--cor-dourado-hover);
+            border-color: var(--cor-dourado-hover);
+        }
+
+        .fc .fc-button-primary:not(:disabled).fc-button-active {
+            background-color: var(--main);
+            border-color: var(--main);
+            color: var(--white);
+            /* Cor do texto para o botão ativo */
+        }
+
+        .fc .fc-toolbar-title {
+            color: var(--dark-text);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            color: var(--main);
+            font-weight: 600;
+            padding: .5rem 0;
+            /* Espaçamento para os dias da semana */
+        }
+
+        .fc .fc-daygrid-day-number {
+            color: var(--dark-text);
+            font-weight: 500;
+            padding: .2rem .4rem;
+        }
+
+        .fc .fc-daygrid-day.fc-day-today {
+            background-color: var(--accent-light);
+            /* Cor de fundo para o dia atual */
+            border-radius: .5rem;
+        }
+
+        .fc .fc-event {
+            background-color: var(--main);
+            border-color: var(--main);
+            border-radius: .3rem;
+            padding: .2rem .4rem;
+            margin-bottom: 3px;
+            /* Aumenta um pouco o espaçamento entre eventos empilhados */
+            font-size: .85rem;
+            color: var(--white);
+            cursor: pointer;
+        }
+
+        .fc .fc-event-title {
+            color: var(--white);
+            font-size: .85rem;
+        }
+
+        .fc-event-time {
+            font-weight: 600;
+        }
+
+        .fc-daygrid-event-dot {
+            border-color: var(--white);
+        }
+
+        .fc .fc-event.status-agendado {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .fc .fc-event.status-realizado {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+
+        .fc .fc-event.status-cancelado {
+            background-color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .fc .fc-event.status-pendente {
+            background-color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .calendar-container {
+            display: block;
+        }
+
+        /* Responsividade para o calendário */
+        @media (max-width: 768px) {
+            .fc-toolbar {
+                flex-direction: column;
+            }
+
+            .fc .fc-toolbar-title {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .fc .fc-button-group {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .fc .fc-button {
+                margin: .2rem;
+                padding: .4rem .8rem;
+            }
+
+            .fc-daygrid-day-number {
+                font-size: .8rem;
+            }
+
+            .fc .fc-event {
+                font-size: .75rem;
+                padding: .1rem .3rem;
+            }
+
+            .fc-list-event .fc-event-main-frame {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .fc-list-event .fc-event-details {
+                margin-top: 0.5rem;
+            }
+
+            .calendar-container {
+                display: none;
+            }
+
+            .card .value {
+                font-size: 1.5rem; /* Reduzido para caber melhor */
+            }
+        }
+
+        /* Otimização do layout do dashboard-grid */
+        .dashboard-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            /* Ajuste para telas menores */
+        }
+
+        @media(max-width: 800px) {
+
+            .filter-bar,
+            .section-header {
+                flex-direction: column;
+                padding: 1rem;
+                align-items: stretch;
+            }
+
+            .container {
+                padding: 1.5rem 1rem;
+            }
+
+            .modal {
+                padding: 1.5rem;
+            }
+
+            .table-wrapper {
+                box-shadow: none;
+            }
+
+            table {
+                box-shadow: var(--shadow);
+            }
+
+            thead {
+                display: none;
+            }
+
+            tr {
+                display: block;
+                margin-bottom: 1rem;
+                border-radius: .8rem;
+                overflow: hidden;
+                box-shadow: var(--shadow);
+                background: var(--cor-bege-claro);
+            }
+
+            td {
+                display: block;
+                text-align: right;
+                position: relative;
+                padding-left: 50%;
+                border: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 1rem;
+                width: calc(50% - 2rem);
+                text-align: left;
+                font-weight: 600;
+                color: var(--main);
+            }
+
+            td:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .hamburger-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background: var(--main);
+            padding-top: 60px;
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .sidebar-nav button {
+            background: none;
+            border: none;
+            color: var(--cor-bege-claro);
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-align: left;
+        }
+
+        .sidebar-nav button:hover {
+            background: var(--cor-dourado);
+            color: var(--cor-texto-escuro);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        @media(max-width: 1024px) {
+            header nav {
+                display: none;
+            }
+
+            .hamburger-menu-btn {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="login-panel">
+        <h2><i class="fa-solid fa-scale-balanced"></i> Login do Advogado</h2>
+        <div class="form-group">
+            <label for="login-email">E-mail</label>
+            <input id="login-email" type="email" placeholder="E-mail" required>
+        </div>
+        <div class="form-group">
+            <label for="login-senha">Senha</label>
+            <input id="login-senha" type="password" placeholder="Senha" required>
+        </div>
+        <button id="btnLogin" class="btn" style="width: 100%;">Entrar</button>
+        <div id="login-erro"></div>
+        <p style="text-align:center; margin-top:1.8rem; font-size:.9rem; color:#666;">
+            Primeiro acesso? <a href="#" id="btnCriarConta" style="color:var(--accent); font-weight:600;">Criar
+                conta</a>
+        </p>
+    </div>
+
+    <div id="app" style="display:none">
+        <header>
+            <button id="hamburger-menu" class="hamburger-menu-btn">
+                <i class="fa fa-bars"></i>
+            </button>
+            <h1><i class="fa-solid fa-scale-balanced" style="color: var(--success);"></i> Painel Jurídico</h1>
+            <nav>
+                <button id="nav0" class="active" onclick="abrirTab(0)"><i class="fa fa-chart-pie"></i> Painel</button>
+                <button id="nav1" onclick="abrirTab(1)"><i class="fa fa-briefcase"></i> Casos</button>
+                <button id="nav2" onclick="abrirTab(2)"><i class="fa fa-users"></i> Clientes</button>
+                <button id="nav3" onclick="abrirTab(3)"><i class="fa fa-folder-open"></i> Documentos</button>
+                <button id="nav4" onclick="abrirTab(4)"><i class="fa fa-calendar-alt"></i> Agenda</button>
+                <button id="nav5" onclick="abrirTab(5)"><i class="fa fa-tasks"></i> Tarefas</button>
+                <button id="nav6" onclick="abrirTab(6)"><i class="fa fa-hand-holding-dollar"></i> Financeiro</button>
+                <button id="nav7" onclick="abrirTab(7)"><i class="fa fa-users"></i> Casos por Clientes</button>
+            </nav>
+            <button id="btnLogout" class="btn" style="background: #fff1f3; color:#d43c5e;">Sair <i
+                    class="fa fa-sign-out-alt"></i></button>
+        </header>
+
+        <aside id="sidebar" class="sidebar">
+            <nav class="sidebar-nav">
+                <button id="nav0-sidebar" class="active" onclick="abrirTab(0); closeSidebar();"><i class="fa fa-chart-pie"></i> Painel</button>
+                <button id="nav1-sidebar" onclick="abrirTab(1); closeSidebar();"><i class="fa fa-briefcase"></i> Casos</button>
+                <button id="nav2-sidebar" onclick="abrirTab(2); closeSidebar();"><i class="fa fa-users"></i> Clientes</button>
+                <button id="nav3-sidebar" onclick="abrirTab(3); closeSidebar();"><i class="fa fa-folder-open"></i> Documentos</button>
+                <button id="nav4-sidebar" onclick="abrirTab(4); closeSidebar();"><i class="fa fa-calendar-alt"></i> Agenda</button>
+                <button id="nav5-sidebar" onclick="abrirTab(5); closeSidebar();"><i class="fa fa-tasks"></i> Tarefas</button>
+                <button id="nav6-sidebar" onclick="abrirTab(6); closeSidebar();"><i class="fa fa-hand-holding-dollar"></i> Financeiro</button>
+                <button id="nav7-sidebar" onclick="abrirTab(7); closeSidebar();"><i class="fa fa-users"></i> Casos por Clientes</button>
+            </nav>
+        </aside>
+
+        <div id="overlay" class="overlay"></div>
+
+        <main class="container">
+            <div id="notificacoes"></div>
+
+            <!-- TAB: PAINEL GERAL -->
+            <div class="tab-content active" id="tab0">
+                <div class="section-header">
+                    <h2>Visão Geral</h2>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="card"><i class="icon fa fa-users"></i>
+                        <div class="value" id="total-clientes">0</div>
+                        <div class="label">Total de Clientes</div>
+                    </div>
+                    <div class="card"><i class="icon fa fa-briefcase"></i>
+                        <div class="value" id="casos-ativos">0</div>
+                        <div class="label">Casos Ativos</div>
+                    </div>
+                    <div class="card"><i class="icon fa fa-calendar-check"></i>
+                        <div class="value" id="eventos-agendados">0</div>
+                        <div class="label">Eventos Agendados</div>
+                    </div>
+                    <div class="card"><i class="icon fa fa-hand-holding-dollar"></i>
+                        <div class="value" id="total-a-receber">R$ 0,00</div>
+                        <div class="label">Total a Receber</div>
+                    </div>
+                </div>
+                <div class="calendar-container">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+
+            <!-- TAB: CASOS -->
+            <div class="tab-content" id="tab1">
+                <div class="section-header">
+                    <h2>Casos & Processos</h2>
+                </div>
+                <div class="filter-bar">
+                    <input id="buscar-caso" type="text" placeholder="Buscar por nº do processo, cliente, partes…"
+                        onkeyup="renderCasos()">
+                    <select id="filtro-caso-status" onchange="renderCasos()">
+                        <option value="">Todos os Status</option>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Concluído">Concluído</option>
+                        <option value="Arquivado">Arquivado</option>
+                    </select>
+                    <button class="btn btn-success" onclick="abrirModalCaso()"><i class="fa fa-plus"></i> Novo
+                        Caso</button>
+                </div>
+                <div class="table-wrapper" id="tabela-casos"></div>
+            </div>
+
+            <!-- TAB: CLIENTES -->
+            <div class="tab-content" id="tab2">
+                <div class="section-header">
+                    <h2>Clientes</h2>
+                </div>
+                <div class="filter-bar">
+                    <input id="buscar-cliente" type="text" placeholder="Buscar por nome, e-mail, telefone…"
+                        onkeyup="renderClientes()">
+                    <button class="btn btn-success" onclick="abrirModalCliente()"><i class="fa fa-plus"></i> Novo
+                        Cliente</button>
+                </div>
+                <div class="table-wrapper" id="tabela-clientes"></div>
+            </div>
+
+            <!-- TAB: DOCUMENTOS -->
+            <div class="tab-content" id="tab3">
+                <div class="section-header">
+                    <h2>Gestão de Documentos</h2>
+                </div>
+                <div class="filter-bar">
+                    <select id="doc-filtro-cliente" onchange="renderDocumentos()">
+                        <option value="">Filtrar por cliente</option>
+                    </select>
+                    <select id="doc-filtro-caso" onchange="renderDocumentos()">
+                        <option value="">Filtrar por caso</option>
+                    </select>
+                    <button class="btn btn-success" onclick="abrirModalDocumento()"><i class="fa fa-upload"></i> Anexar
+                        Documento</button>
+                </div>
+                <div class="table-wrapper" id="tabela-documentos"></div>
+            </div>
+
+            <!-- TAB: AGENDA -->
+            <div class="tab-content" id="tab4">
+                <div class="section-header">
+                    <h2>Agenda & Prazos</h2>
+                    <button class="btn btn-success" onclick="abrirModalEvento()"><i class="fa fa-calendar-plus"></i>
+                        Novo Evento</button>
+                </div>
+                <div class="filter-bar">
+                    <input id="agenda-filtro-data" type="date" onchange="renderAgenda()">
+                    <select id="agenda-filtro-tipo" onchange="renderAgenda()">
+                        <option value="">Todos os Tipos</option>
+                        <option>Audiência</option>
+                        <option>Reunião</option>
+                        <option>Prazo Processual</option>
+                        <option>Outro</option>
+                    </select>
+                </div>
+                <div class="table-wrapper" id="tabela-agenda"></div>
+            </div>
+
+            <!-- TAB: TAREFAS -->
+            <div class="tab-content" id="tab5">
+                <div class="section-header">
+                    <h2>Controle de Tarefas</h2>
+                    <button class="btn btn-success" onclick="abrirModalTarefa()"><i class="fa fa-plus"></i> Nova
+                        Tarefa</button>
+                </div>
+                <div class="filter-bar">
+                    <select id="filtro-tarefa-status" onchange="renderTarefas()">
+                        <option value="Pendente">Pendentes</option>
+                        <option value="">Todas</option>
+                        <option value="Concluída">Concluídas</option>
+                    </select>
+                    <select id="filtro-tarefa-prioridade" onchange="renderTarefas()">
+                        <option value="">Todas as Prioridades</option>
+                        <option>Alta</option>
+                        <option>Média</option>
+                        <option>Baixa</option>
+                    </select>
+                </div>
+                <div class="table-wrapper" id="tabela-tarefas"></div>
+            </div>
+
+            <!-- TAB: FINANCEIRO -->
+            <div class="tab-content" id="tab6">
+                <div class="section-header">
+                    <h2>Financeiro</h2>
+                </div>
+                <div id="resumo-financeiro" class="painel-cards"></div>
+                <div class="section-header" style="margin-top: 2.5rem; margin-bottom: 1rem;">
+                    <h3 style="font-size: 1.5rem;">Histórico de Lançamentos</h3>
+                    <div class="filter-bar" style="margin-bottom: 0;">
+                        <button class="btn btn-success" onclick="abrirModalFin('Receber')"><i class="fa fa-plus"></i>
+                            Nova Receita</button>
+                        <button class="btn btn-danger" onclick="abrirModalFin('Pagar')"><i class="fa fa-minus"></i> Nova
+                            Despesa</button>
+                    </div>
+                </div>
+                <div class="table-wrapper" id="tabela-financeiro"></div>
+            </div>
+
+
+
+            <!-- TAB: CASOS POR CLIENTE -->
+            <div class="tab-content" id="tab7">
+                <div class="section-header">
+                    <h2>Casos por Cliente</h2>
+                </div>
+                <div class="filter-bar">
+                    <input id="buscar-casos-por-cliente" type="text" placeholder="Buscar por nome do cliente..."
+                        onkeyup="renderCasosPorCliente()">
+                </div>
+                <div id="casos-por-cliente-container"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ========= MODAIS ========= -->
+    <div class="modal-bg" id="modal-caso">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-caso-titulo">Novo Caso</h3><button class="close-modal"
+                    onclick="fecharModal('modal-caso')">&times;</button>
+            </div>
+            <form onsubmit="salvarCaso(event);">
+                <input type="hidden" id="caso-id">
+                <div class="form-group"><label for="caso-cliente">Cliente *</label><select id="caso-cliente"
+                        required></select></div>
+                <div class="form-group"><label for="caso-numero">Nº do Processo *</label><input id="caso-numero"
+                        type="text" maxlength="60" required></div>
+                <div class="form-group"><label for="caso-partes">Partes Envolvidas</label><textarea id="caso-partes"
+                        placeholder="Autor, réu, terceiro..." rows="3"></textarea></div>
+                <div class="form-group"><label for="caso-responsavel">Advogado Responsável</label><input
+                        id="caso-responsavel" type="text"></div>
+                <div class="form-group"><label for="caso-data">Data de Abertura</label><input id="caso-data"
+                        type="date"></div>
+                <div class="form-group"><label for="caso-status">Status</label><select id="caso-status">
+                        <option>Ativo</option>
+                        <option>Concluído</option>
+                        <option>Arquivado</option>
+                    </select></div>
+                <div class="modal-footer"><button type="submit" class="btn btn-success"><i class="fa fa-save"></i>
+                        Salvar</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-bg" id="modal-cliente">
+        <div class="modal" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3 id="modal-cliente-titulo">Novo Cliente</h3><button class="close-modal"
+                    onclick="fecharModal('modal-cliente')">&times;</button>
+            </div>
+            <form onsubmit="salvarCliente(event);">
+                <input type="hidden" id="cliente-id">
+                <div class="form-group"><label for="cliente-nome">Nome Completo *</label><input id="cliente-nome"
+                        type="text" required></div>
+                <div class="form-group"><label for="cliente-email">E-mail</label><input id="cliente-email" type="email">
+                </div>
+                <div class="form-group"><label for="cliente-fone">Telefone</label><input id="cliente-fone" type="tel">
+                </div>
+                <div class="form-group"><label for="cliente-notas">Anotações / Preferências</label><textarea
+                        id="cliente-notas" rows="4"></textarea></div>
+                <div class="modal-footer"><button type="submit" class="btn btn-success"><i class="fa fa-save"></i>
+                        Salvar</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-bg" id="modal-documento">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Anexar Documento</h3><button class="close-modal"
+                    onclick="fecharModal('modal-documento')">&times;</button>
+            </div>
+            <form onsubmit="salvarDocumento(event);">
+                <p style="font-size: .85rem; color: var(--muted-text); margin-bottom: 1rem;">Anexe arquivos a um cliente
+                    ou caso. Os arquivos são salvos na nuvem de forma segura.</p>
+                <input type="hidden" id="doc-id">
+                <div class="form-group"><label for="doc-cliente">Cliente *</label><select id="doc-cliente"
+                        required></select></div>
+                <div class="form-group"><label for="doc-caso">Vincular ao Caso (opcional)</label><select
+                        id="doc-caso"></select></div>
+                <div class="form-group"><label for="doc-titulo">Título / Descrição *</label><input id="doc-titulo"
+                        type="text" required></div>
+                <div class="form-group"><label for="doc-file">Arquivo *</label><input id="doc-file" type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx" required></div>
+                <div class="modal-footer"><button type="submit" class="btn btn-success"><i class="fa fa-save"></i>
+                        Salvar</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-bg" id="modal-evento">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="evento-modal-titulo">Novo Evento / Prazo</h3><button class="close-modal"
+                    onclick="fecharModal('modal-evento')">&times;</button>
+            </div>
+            <form onsubmit="salvarEvento(event);">
+                <input type="hidden" id="evento-id">
+                <div class="form-group"><label for="evento-titulo">Título *</label><input id="evento-titulo" type="text"
+                        required></div>
+                <div class="form-group"><label for="evento-tipo">Tipo de Evento *</label><select id="evento-tipo"
+                        required>
+                        <option>Audiência</option>
+                        <option>Reunião</option>
+                        <option>Prazo Processual</option>
+                        <option>Outro</option>
+                    </select></div>
+                <div class="form-group"><label for="evento-datahora">Data e Hora *</label><input id="evento-datahora"
+                        type="datetime-local" required></div>
+                <div class="form-group"><label for="evento-local">Local / Link</label><input id="evento-local"
+                        type="text" placeholder="Ex: Fórum Central, link da chamada..."></div>
+                <div class="form-group"><label for="evento-cliente">Vincular ao Cliente</label><select
+                        id="evento-cliente"
+                        onchange="populateSelect('evento-caso', 'casos', 'id', 'numero', `cliente_id.eq.${this.value}`, 'Nenhum')"></select>
+                </div>
+                <div class="form-group"><label for="evento-caso">Vincular ao Caso</label><select
+                        id="evento-caso"></select></div>
+                <div class="form-group"><label for="evento-status">Status</label><select id="evento-status">
+                        <option>Agendado</option>
+                        <option>Realizado</option>
+                        <option>Cancelado</option>
+                    </select></div>
+                <div class="form-group"><label for="evento-descricao">Descrição</label><textarea id="evento-descricao"
+                        rows="3"></textarea></div>
+                <div class="modal-footer"><button type="submit" class="btn btn-success"><i class="fa fa-save"></i>
+                        Salvar</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-bg" id="modal-tarefa">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="tarefa-modal-titulo">Nova Tarefa</h3><button class="close-modal"
+                    onclick="fecharModal('modal-tarefa')">&times;</button>
+            </div>
+            <form onsubmit="salvarTarefa(event);">
+                <input type="hidden" id="tarefa-id">
+                <div class="form-group"><label for="tarefa-descricao">Descrição *</label><textarea id="tarefa-descricao"
+                        rows="3" required></textarea></div>
+                <div class="form-group"><label for="tarefa-prioridade">Prioridade</label><select id="tarefa-prioridade">
+                        <option>Baixa</option>
+                        <option>Média</option>
+                        <option>Alta</option>
+                    </select></div>
+                <div class="form-group"><label for="tarefa-prazo">Data do Prazo</label><input id="tarefa-prazo"
+                        type="date"></div>
+                <div class="form-group"><label for="tarefa-cliente">Vincular ao Cliente</label><select
+                        id="tarefa-cliente"
+                        onchange="populateSelect('tarefa-caso', 'casos', 'id', 'numero', `cliente_id.eq.${this.value}`, 'Nenhum')"></select>
+                </div>
+                <div class="form-group"><label for="tarefa-caso">Vincular ao Caso</label><select
+                        id="tarefa-caso"></select></div>
+                <div class="modal-footer"><button type="submit" class="btn btn-success"><i class="fa fa-save"></i>
+                        Salvar</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-bg" id="modal-fin">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="fin-titulo">Novo Lançamento</h3><button class="close-modal"
+                    onclick="fecharModal('modal-fin')">&times;</button>
+            </div>
+            <form onsubmit="salvarFin(event);">
+                <input type="hidden" id="fin-id"><input type="hidden" id="fin-tipo">
+                <div class="form-group"><label for="fin-descricao">Descrição *</label><input id="fin-descricao"
+                        type="text" required></div>
+                <div class="form-group"><label for="fin-categoria">Categoria *</label><select id="fin-categoria"
+                        required>
+                        <option>Honorários</option>
+                        <option>Custas Processuais</option>
+                        <option>Acordo</option>
+                        <option>Serviços de Terceiros</option>
+                        <option>Despesas Gerais</option>
+                        <option>Outra</option>
+                    </select></div>
+                <div class="form-group"><label for="fin-valor">Valor (R$) *</label><input id="fin-valor" type="number"
+                        step="0.01" placeholder="Ex: 1500.50" required></div>
+                <div class="form-group"><label for="fin-data">Data *</label><input id="fin-data" type="date" required>
+                </div>
+                <div class="form-group"><label for="fin-status">Status Pagamento</label><select id="fin-status">
+                        <option>Pendente</option>
+                        <option>Pago</option>
+                        <option>Vencido</option>
+                    </select></div>
+                <div class="form-group"><label for="fin-cliente">Vincular ao Cliente</label><select id="fin-cliente"
+                        onchange="populateSelect('fin-caso', 'casos', 'id', 'numero', `cliente_id.eq.${this.value}`, 'Nenhum')"></select>
+                </div>
+                <div class="form-group"><label for="fin-caso">Vincular ao Caso</label><select id="fin-caso"></select>
+                </div>
+                <div class="modal-footer"><button type="submit" class="btn btn-success"><i class="fa fa-save"></i>
+                        Salvar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script>
+        // =================================================================================
+        // PAINEL JURÍDICO - SCRIPT COMPLETO (Versão Supabase) - SPINNERS
+        // =================================================================================
+
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => document.querySelectorAll(s);
+
+        // -- CONFIGURAÇÃO DO SUPABASE --
+        const SUPABASE_URL = 'https://dcznczboecepxvhpgoic.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjem5jemJvZWNlcHh2aHBnb2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MjUzOTMsImV4cCI6MjA2NzMwMTM5M30.3mImRzhc2_CbnIIblSlYQje_O68yl1v9xiSxBX15lHE';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // -- INSTÂNCIAS DOS GRÁFICOS --
+        let overviewChart, reportsChart;
+
+        /* ------------- HELPERS GLOBAIS ------------- */
+        const SPINNER_HTML = '<div class="spinner"></div>';
+        const fmtDate = (d) => d ? new Date(d).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '';
+        const fmtDateTime = (d) => d ? new Date(d).toLocaleString('pt-BR', { timeZone: 'UTC' }) : '';
+        const fmtCurrency = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function showNotif(type, msg) {
+            const icons = { success: 'fa-check-circle', danger: 'fa-times-circle', info: 'fa-info-circle' };
+            const div = document.createElement('div');
+            div.className = `notif ${type}`;
+            div.innerHTML = `<i class="fa ${icons[type]}"></i><span>${msg}</span>`;
+            $('#notificacoes').appendChild(div);
+            setTimeout(() => {
+                div.style.animation = 'slideOut .4s forwards';
+                setTimeout(() => div.remove(), 400);
+            }, 4000);
+        }
+
+        function fecharModal(modalId) { $(`#${modalId}`).classList.remove('active'); }
+
+        async function populateSelect(selectId, tableName, valueCol, textCol, filter = '', placeholder = 'Selecione', selectedValue = null) {
+            const select = $(`#${selectId}`);
+            select.innerHTML = `<option value="">${placeholder}</option>`;
+            let query = sb.from(tableName).select(`${valueCol}, ${textCol}`);
+            if (filter && filter.split('.').length === 3) {
+                const [column, op, value] = filter.split('.');
+                if (value) {
+                    query = query[op](column, value);
+                }
+            }
+            const { data, error } = await query.order(textCol);
+
+            if (error) {
+                console.error("Erro ao popular select:", error);
+                return;
+            }
+            if (data) {
+                data.forEach(r => select.innerHTML += `<option value="${r[valueCol]}">${r[textCol]}</option>`);
+            }
+            if (selectedValue) select.value = selectedValue;
+        }
+
+        /* ------------- FUNÇÕES DE RENDERIZAÇÃO (COM SPINNERS) ------------- */
+
+        async function loadDashboard() {
+            $('#total-clientes').innerHTML = SPINNER_HTML;
+            $('#casos-ativos').innerHTML = SPINNER_HTML;
+            $('#eventos-agendados').innerHTML = SPINNER_HTML;
+            $('#total-a-receber').innerHTML = SPINNER_HTML;
+
+            const { count: totalClientes, error: clientesError } = await sb.from('clientes').select('id', { count: 'exact', head: true });
+            if (clientesError) console.error('Erro ao buscar total de clientes:', clientesError);
+            $('#total-clientes').innerText = totalClientes || 0;
+
+            const { count: casosAtivos, error: casosError } = await sb.from('casos').select('id', { count: 'exact', head: true }).eq('status', 'Ativo');
+            if (casosError) console.error('Erro ao buscar casos ativos:', casosError);
+            $('#casos-ativos').innerText = casosAtivos || 0;
+
+            const { count: eventosAgendados, error: eventosError } = await sb.from('agenda').select('id', { count: 'exact', head: true }).eq('status', 'Agendado');
+            if (eventosError) console.error('Erro ao buscar eventos agendados:', eventosError);
+            $('#eventos-agendados').innerText = eventosAgendados || 0;
+
+            const { data: financas, error: finError } = await sb.rpc('get_financeiro_summary');
+            if (finError) console.error("Erro ao carregar resumo financeiro:", finError);
+            const resumo = financas && financas.length ? financas[0] : { a_receber: 0 };
+            $('#total-a-receber').innerText = fmtCurrency(resumo.a_receber);
+
+            // FullCalendar
+            const calendarEl = $('#calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth',
+                locale: 'pt-br',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                },
+                eventOrder: 'start,title', // Ordena eventos por data/hora de início e depois por título
+                events: async (fetchInfo, successCallback, failureCallback) => {
+                    const { data: agendaData, error: agendaError } = await sb.from('agenda').select('id, titulo, datahora, tipo_evento, status');
+                    const { data: tarefasData, error: tarefasError } = await sb.from('tarefas').select('id, descricao, prazo_data, status');
+
+                    if (agendaError) {
+                        console.error('Erro ao buscar eventos da agenda:', agendaError);
+                        failureCallback(agendaError);
+                    }
+                    if (tarefasError) {
+                        console.error('Erro ao buscar tarefas:', tarefasError);
+                        failureCallback(tarefasError);
+                    }
+
+                    const events = agendaData.map(event => ({
+                        id: event.id,
+                        title: event.titulo,
+                        start: event.datahora,
+                        allDay: event.tipo_evento === 'Prazo Processual',
+                        extendedProps: { type: 'agenda' },
+                        classNames: [`status-${event.status.toLowerCase()}`] // Adiciona a classe de status
+                    }));
+
+                    tarefasData.forEach(tarefa => {
+                        if (tarefa.prazo_data) {
+                            events.push({
+                                id: tarefa.id,
+                                title: `Tarefa: ${tarefa.descricao}`,
+                                start: tarefa.prazo_data,
+                                allDay: true,
+                                extendedProps: { type: 'tarefa' },
+                                classNames: [`status-${tarefa.status.toLowerCase()}`] // Adiciona a classe de status
+                            });
+                        }
+                    });
+                    successCallback(events);
+                },
+                eventClick: function (info) {
+                    if (info.event.extendedProps.type === 'agenda') {
+                        abrirModalEvento(info.event.id);
+                    } else if (info.event.extendedProps.type === 'tarefa') {
+                        abrirModalTarefa(info.event.id);
+                    }
+                },
+                eventContent: function(arg) {
+                    let eventDetails = document.createElement('div');
+                    let statusBadge = arg.event.extendedProps.status ? `<span class="badge ${arg.event.extendedProps.status}">${arg.event.extendedProps.status}</span>` : '';
+                    let typeBadge = arg.event.extendedProps.tipo_evento ? `<span class="badge">${arg.event.extendedProps.tipo_evento}</span>` : '';
+
+                    eventDetails.innerHTML = `
+                        <div class="fc-event-main-frame">
+                            <div class="fc-event-title-container">
+                                <div class="fc-event-title">${arg.event.title}</div>
+                            </div>
+                        </div>
+                        <div class="fc-event-details">
+                            ${statusBadge}
+                            ${typeBadge}
+                        </div>
+                    `;
+                    return { domNodes: [eventDetails] };
+                },
+                windowResize: function(view) {
+                    if (window.innerWidth < 768) {
+                        calendar.changeView('listWeek');
+                    } else {
+                        calendar.changeView('dayGridMonth');
+                    }
+                }
+            });
+            calendar.render();
+        }
+
+        async function renderCasos() {
+            $('#tabela-casos').innerHTML = SPINNER_HTML;
+            const busca = $('#buscar-caso').value.toLowerCase();
+            const status = $('#filtro-caso-status').value;
+            let query = sb.from('casos').select(`id, numero, partes, status, clientes ( nome )`);
+            if (status) query = query.eq('status', status);
+            if (busca) query = query.or(`numero.ilike.%${busca}%,partes.ilike.%${busca}%,clientes.nome.ilike.%${busca}%`);
+            const { data, error } = await query.order('id', { ascending: false });
+
+            const table = $('#tabela-casos');
+            if (error || !data || !data.length) {
+                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum caso encontrado.</p>`;
+                if (error) console.error('Erro ao renderizar casos:', error);
+                return;
+            }
+            table.innerHTML = `<table><thead><tr><th>Nº Processo</th><th>Cliente</th><th>Partes</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+            ${data.map(r => `<tr>
+                <td data-label="Nº Processo">${r.numero}</td>
+                <td data-label="Cliente">${r.clientes.nome}</td>
+                <td data-label="Partes">${r.partes || ''}</td>
+                <td data-label="Status"><span class="badge ${r.status}">${r.status}</span></td>
+                <td data-label="Ações"><div class="actions">
+                    <button onclick="abrirModalCaso(${r.id})" title="Editar"><i class="fa fa-edit"></i></button>
+                    <button onclick="delRow('casos', ${r.id}, renderCasos)" title="Excluir"><i class="fa fa-trash"></i></button>
+                </div></td>
+            </tr>`).join('')}</tbody></table>`;
+        }
+
+        async function renderClientes() {
+            $('#tabela-clientes').innerHTML = SPINNER_HTML;
+            const busca = $('#buscar-cliente').value.toLowerCase();
+            let query = sb.from('clientes').select('id, nome, email, fone');
+            if (busca) query = query.or(`nome.ilike.%${busca}%,email.ilike.%${busca}%,fone.ilike.%${busca}%`);
+            const { data, error } = await query.order('nome');
+
+            const table = $('#tabela-clientes');
+            if (error || !data || !data.length) {
+                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum cliente encontrado.</p>`;
+                if (error) console.error('Erro ao renderizar clientes:', error);
+                return;
+            }
+            table.innerHTML = `<table><thead><tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Ações</th></tr></thead><tbody>
+            ${data.map(r => `<tr>
+                <td data-label="Nome">${r.nome}</td>
+                <td data-label="E-mail">${r.email || ''}</td>
+                <td data-label="Telefone">${r.fone || ''}</td>
+                <td data-label="Ações"><div class="actions">
+                    <button onclick="abrirModalCliente(${r.id})" title="Editar"><i class="fa fa-edit"></i></button>
+                    <button onclick="delRow('clientes', ${r.id}, renderClientes)" title="Excluir"><i class="fa fa-trash"></i></button>
+                </div></td>
+            </tr>`).join('')}</tbody></table>`;
+        }
+
+        async function renderDocumentos() {
+            $('#tabela-documentos').innerHTML = SPINNER_HTML;
+            const clienteId = $('#doc-filtro-cliente').value;
+            const casoId = $('#doc-filtro-caso').value;
+            let query = sb.from('docs').select(`id, titulo, data, nome_arquivo, clientes (nome), casos (numero)`);
+            if (clienteId) query = query.eq('cliente_id', clienteId);
+            if (casoId) query = query.eq('caso_id', casoId);
+            const { data, error } = await query.order('id', { ascending: false });
+
+            const table = $('#tabela-documentos');
+            if (error || !data || !data.length) {
+                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum documento encontrado.</p>`;
+                if (error) console.error('Erro ao renderizar documentos:', error);
+                return;
+            }
+            table.innerHTML = `<table><thead><tr><th>Título</th><th>Cliente</th><th>Caso</th><th>Data</th><th>Arquivo</th><th>Ações</th></tr></thead><tbody>
+            ${data.map(r => `<tr>
+                <td data-label="Título">${r.titulo}</td>
+                <td data-label="Cliente">${r.clientes?.nome || 'N/A'}</td>
+                <td data-label="Caso">${r.casos?.numero || 'N/A'}</td>
+                <td data-label="Data">${fmtDate(r.data)}</td>
+                <td data-label="Arquivo">${r.nome_arquivo}</td>
+                <td data-label="Ações"><div class="actions">
+                    <button onclick="downloadDoc(${r.id})" title="Baixar"><i class="fa fa-download"></i></button>
+                    <button onclick="delRow('docs', ${r.id}, renderDocumentos)" title="Excluir"><i class="fa fa-trash"></i></button>
+                </div></td>
+            </tr>`).join('')}</tbody></table>`;
+        }
+
+        async function renderAgenda() {
+            $('#tabela-agenda').innerHTML = SPINNER_HTML;
+            const dataFiltro = $('#agenda-filtro-data').value;
+            const tipoFiltro = $('#agenda-filtro-tipo').value;
+            let query = sb.from('agenda').select(`id, titulo, datahora, status, tipo_evento, local, clientes(nome), casos(numero)`);
+            if (dataFiltro) {
+                const dataFim = new Date(dataFiltro);
+                dataFim.setDate(dataFim.getDate() + 1);
+                query = query.gte('datahora', dataFiltro).lt('datahora', dataFim.toISOString().split('T')[0]);
+            }
+            if (tipoFiltro) query = query.eq('tipo_evento', tipoFiltro);
+            const { data, error } = await query.order('datahora', { ascending: false });
+
+            const table = $('#tabela-agenda');
+            if (error || !data || !data.length) {
+                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum evento encontrado.</p>`;
+                if (error) console.error('Erro ao renderizar agenda:', error);
+                return;
+            }
+            table.innerHTML = `<table><thead><tr><th>Evento/Prazo</th><th>Tipo</th><th>Cliente/Caso</th><th>Data/Hora</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+            ${data.map(r => `<tr>
+                <td data-label="Evento">${r.titulo}</td>
+                <td data-label="Tipo">${r.tipo_evento}</td>
+                <td data-label="Cliente/Caso">${r.clientes?.nome || ''}${r.casos?.numero ? ` / ${r.casos.numero}` : ''}</td>
+                <td data-label="Data/Hora">${fmtDateTime(r.datahora)}</td>
+                <td data-label="Status"><span class="badge ${r.status}">${r.status}</span></td>
+                <td data-label="Ações"><div class="actions">
+                    <button onclick="abrirModalEvento(${r.id})" title="Editar"><i class="fa fa-edit"></i></button>
+                    <button onclick="delRow('agenda', ${r.id}, renderAgenda)" title="Excluir"><i class="fa fa-trash"></i></button>
+                </div></td>
+            </tr>`).join('')}</tbody></table>`;
+        }
+
+        async function renderTarefas() {
+            $('#tabela-tarefas').innerHTML = SPINNER_HTML;
+            const status = $('#filtro-tarefa-status').value;
+            const prioridade = $('#filtro-tarefa-prioridade').value;
+            let query = sb.from('tarefas').select(`id, descricao, status, prioridade, prazo_data, clientes(nome), casos(numero)`);
+            if (status) query = query.eq('status', status);
+            if (prioridade) query = query.eq('prioridade', prioridade);
+            const { data, error } = await query.order('id', { ascending: false });
+
+            const table = $('#tabela-tarefas');
+            if (error || !data || !data.length) {
+                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhuma tarefa encontrada.</p>`;
+                if (error) console.error('Erro ao renderizar tarefas:', error);
+                return;
+            }
+            table.innerHTML = `<table><thead><tr><th></th><th>Descrição</th><th>Cliente/Caso</th><th>Prazo</th><th>Prioridade</th><th>Ações</th></tr></thead><tbody>
+            ${data.map(r => `<tr>
+                <td data-label="Status"><input type="checkbox" onchange="concluirTarefa(${r.id}, this.checked)" ${r.status === 'Concluída' ? 'checked' : ''}></td>
+                <td data-label="Descrição" style="${r.status === 'Concluída' ? 'text-decoration:line-through; color:var(--muted-text)' : ''}">${r.descricao}</td>
+                <td data-label="Cliente/Caso">${r.clientes?.nome || ''}${r.casos?.numero ? ` / ${r.casos.numero}` : ''}</td>
+                <td data-label="Prazo">${fmtDate(r.prazo_data)}</td>
+                <td data-label="Prioridade"><span class="badge ${r.prioridade}">${r.prioridade}</span></td>
+                <td data-label="Ações"><div class="actions">
+                    <button onclick="abrirModalTarefa(${r.id})" title="Editar"><i class="fa fa-edit"></i></button>
+                    <button onclick="delRow('tarefas', ${r.id}, renderTarefas)" title="Excluir"><i class="fa fa-trash"></i></button>
+                </div></td>
+            </tr>`).join('')}</tbody></table>`;
+        }
+
+        async function loadFinanceiro() {
+            $('#resumo-financeiro').innerHTML = SPINNER_HTML;
+            $('#tabela-financeiro').innerHTML = SPINNER_HTML;
+            const { data: financas, error: finError } = await sb.rpc('get_financeiro_summary');
+            if (finError) console.error("Erro ao carregar resumo financeiro:", finError);
+
+            const resumo = financas && financas.length ? financas[0] : { total_realizado: 0, total_despesas: 0, a_receber: 0 };
+
+            $('#resumo-financeiro').innerHTML = `
+                <div class="card"><i class="icon fa fa-arrow-up" style="color:var(--success)"></i><div class="value">${fmtCurrency(resumo.total_realizado)}</div><div class="label">Total Realizado</div></div>
+                <div class="card"><i class="icon fa fa-arrow-down" style="color:var(--danger)"></i><div class="value">${fmtCurrency(resumo.total_despesas)}</div><div class="label">Total Despesas</div></div>
+                <div class="card"><i class="icon fa fa-balance-scale" style="color:var(--info)"></i><div class="value">${fmtCurrency(resumo.total_realizado - resumo.total_despesas)}</div><div class="label">Saldo</div></div>
+                <div class="card"><i class="icon fa fa-hourglass-half" style="color:var(--warning)"></i><div class="value">${fmtCurrency(resumo.a_receber)}</div><div class="label">A Receber</div></div>
+            `;
+
+            const { data, error } = await sb.from('fin').select(`*, clientes(nome), casos(numero)`).order('data', { ascending: false });
+            const table = $('#tabela-financeiro');
+            if (error || !data || !data.length) {
+                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum lançamento financeiro.</p>`;
+                if (error) console.error('Erro ao renderizar financeiro:', error);
+                return;
+            }
+            table.innerHTML = `<table><thead><tr><th>Descrição</th><th>Cliente/Caso</th><th>Data</th><th>Categoria</th><th>Status</th><th>Valor</th><th>Ações</th></tr></thead><tbody>
+            ${data.map(r => `<tr>
+                <td data-label="Descrição">${r.descricao} <span class="badge ${r.tipo}">${r.tipo}</span></td>
+                <td data-label="Cliente/Caso">${r.clientes?.nome || ''}${r.casos?.numero ? ` / ${r.casos.numero}` : ''}</td>
+                <td data-label="Data">${fmtDate(r.data)}</td>
+                <td data-label="Categoria">${r.categoria}</td>
+                <td data-label="Status"><span class="badge ${r.status_pg}">${r.status_pg}</span></td>
+                <td data-label="Valor" style="color:${r.tipo === 'Receber' ? 'var(--success)' : 'var(--danger)'}; font-weight:600;">${fmtCurrency(r.valor)}</td>
+                <td data-label="Ações"><div class="actions">
+                    <button onclick="abrirModalFin('${r.tipo}', ${r.id})" title="Editar"><i class="fa fa-edit"></i></button>
+                    <button onclick="delRow('fin', ${r.id}, loadFinanceiro)" title="Excluir"><i class="fa fa-trash"></i></button>
+                </div></td>
+            </tr>`).join('')}</tbody></table>`;
+        }
+
+        async function loadRelatorios() {
+            const chartContainer = $('#chart-relatorio').parentElement;
+            chartContainer.innerHTML = SPINNER_HTML;
+            const { data, error } = await sb.rpc('get_relatorio_financeiro');
+            chartContainer.innerHTML = '<canvas id="chart-relatorio"></canvas>'; // Recria o canvas
+            if (error) console.error('Erro ao carregar dados do relatório:', error);
+
+            const labels = data ? data.map(r => r.mes) : [];
+            const receitas = data ? data.map(r => r.receitas) : [];
+            const despesas = data ? data.map(r => r.despesas) : [];
+
+            const ctx = $('#chart-relatorio').getContext('2d');
+            if (reportsChart) reportsChart.destroy();
+            reportsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Receitas', data: receitas, backgroundColor: 'rgba(16, 185, 129, 0.7)' },
+                        { label: 'Despesas', data: despesas, backgroundColor: 'rgba(239, 68, 68, 0.7)' }
+                    ]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        async function renderCasosPorCliente() {
+            const container = $('#casos-por-cliente-container');
+            container.innerHTML = SPINNER_HTML;
+            const busca = $('#buscar-casos-por-cliente').value.toLowerCase();
+            let query = sb.from('clientes').select(`id, nome, casos ( numero, status )`);
+            if (busca) {
+                query = query.ilike('nome', `%${busca}%`);
+            }
+            const { data: clientes, error } = await query.order('nome');
+
+            if (error) {
+                container.innerHTML = `<p>Erro ao carregar: ${error.message}</p>`;
+                return;
+            }
+            if (!clientes || !clientes.length) {
+                container.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum cliente encontrado.</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            clientes.forEach(cliente => {
+                const card = document.createElement('div');
+                card.className = 'cliente-card';
+                let casosHtml = '<p>Nenhum caso registrado para este cliente.</p>';
+                if (cliente.casos.length > 0) {
+                    casosHtml = `<div class="table-wrapper"><table>
+                        <thead><tr><th>Nº do Processo</th><th>Status</th></tr></thead>
+                        <tbody>
+                            ${cliente.casos.map(caso => `
+                                <tr>
+                                    <td data-label="Nº do Processo">${caso.numero}</td>
+                                    <td data-label="Status"><span class="badge ${caso.status}">${caso.status}</span></td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table></div>`;
+                }
+                card.innerHTML = `<h3>${cliente.nome}</h3>${casosHtml}`;
+                container.appendChild(card);
+            });
+        }
+
+        /* ------------- LISTA DE FUNÇÕES DE RENDERIZAÇÃO ------------- */
+        const renderFunctions = [loadDashboard, renderCasos, renderClientes, renderDocumentos, renderAgenda, renderTarefas, loadFinanceiro, renderCasosPorCliente];
+
+        /* ------------- UI & NAVEGAÇÃO ------------- */
+        function abrirTab(index) {
+            $$('nav button').forEach(b => b.classList.remove('active'));
+            $(`#nav${index}`).classList.add('active');
+            $$('.tab-content').forEach(t => t.classList.remove('active'));
+            $(`#tab${index}`).classList.add('active');
+            if (renderFunctions[index]) {
+                renderFunctions[index]();
+            }
+        }
+
+        /* ------------- MODAIS E AÇÕES DE SALVAMENTO ------------- */
+
+        async function delRow(tableName, id, renderCallback) {
+            if (confirm("Tem certeza que deseja excluir este registro? A ação não pode ser desfeita.")) {
+                if (tableName === 'docs') {
+                    try {
+                        const { data: doc } = await sb.from('docs').select('path_arquivo').eq('id', id).single();
+                        if (doc && doc.path_arquivo) {
+                            await sb.storage.from('documentos').remove([doc.path_arquivo]);
+                        }
+                    } catch (e) { console.error("Documento não encontrado no storage, prosseguindo."); }
+                }
+
+                const { error } = await sb.from(tableName).delete().eq('id', id);
+                if (error) {
+                    showNotif('danger', 'Erro ao excluir: ' + error.message);
+                    console.error(error);
+                } else {
+                    showNotif('success', 'Registro excluído.');
+                    if (renderCallback) renderCallback();
+                    if (['casos', 'clientes', 'tarefas', 'agenda', 'fin'].includes(tableName)) loadDashboard();
+                }
+            }
+        }
+
+        async function abrirModalCliente(id = null) {
+            $('#modal-cliente form').reset();
+            $('#cliente-id').value = '';
+            if (id) {
+                const { data: r } = await sb.from('clientes').select('*').eq('id', id).single();
+                if (!r) return showNotif('danger', 'Cliente não encontrado.');
+                $('#modal-cliente-titulo').innerText = 'Editar Cliente';
+                $('#cliente-id').value = r.id;
+                $('#cliente-nome').value = r.nome;
+                $('#cliente-email').value = r.email;
+                $('#cliente-fone').value = r.fone;
+                $('#cliente-notas').value = r.notas;
+            } else {
+                $('#modal-cliente-titulo').innerText = 'Novo Cliente';
+            }
+            $('#modal-cliente').classList.add('active');
+        }
+
+        async function salvarCliente(event) {
+            event.preventDefault();
+            const id = $('#cliente-id').value;
+            const record = {
+                nome: $('#cliente-nome').value,
+                email: $('#cliente-email').value,
+                fone: $('#cliente-fone').value,
+                notas: $('#cliente-notas').value,
+            };
+            if (!record.nome) return showNotif('danger', 'O nome do cliente é obrigatório.');
+
+            const { error } = id
+                ? await sb.from('clientes').update(record).eq('id', id)
+                : await sb.from('clientes').insert(record);
+
+            if (error) showNotif('danger', 'Erro: ' + error.message);
+            else {
+                showNotif('success', 'Cliente salvo!');
+                fecharModal('modal-cliente');
+                renderClientes();
+                loadDashboard();
+            }
+        }
+
+        async function abrirModalCaso(id = null) {
+            $('#modal-caso form').reset();
+            $('#caso-id').value = '';
+            await populateSelect('caso-cliente', 'clientes', 'id', 'nome', '', 'Selecione um cliente');
+            if (id) {
+                const { data: r } = await sb.from('casos').select('*').eq('id', id).single();
+                if (!r) return showNotif('danger', 'Caso não encontrado.');
+                $('#modal-caso-titulo').innerText = 'Editar Caso';
+                $('#caso-id').value = r.id;
+                $('#caso-cliente').value = r.cliente_id;
+                $('#caso-numero').value = r.numero;
+                $('#caso-partes').value = r.partes;
+                $('#caso-responsavel').value = r.responsavel;
+                $('#caso-data').value = r.data;
+                $('#caso-status').value = r.status;
+            } else {
+                $('#modal-caso-titulo').innerText = 'Novo Caso';
+                $('#caso-data').valueAsDate = new Date();
+            }
+            $('#modal-caso').classList.add('active');
+        }
+
+        async function salvarCaso(event) {
+            event.preventDefault();
+            const id = $('#caso-id').value;
+            const record = {
+                cliente_id: $('#caso-cliente').value,
+                numero: $('#caso-numero').value,
+                partes: $('#caso-partes').value,
+                responsavel: $('#caso-responsavel').value,
+                data: $('#caso-data').value,
+                status: $('#caso-status').value,
+            };
+            if (!record.cliente_id || !record.numero) return showNotif('danger', 'Cliente e Nº do Processo são obrigatórios.');
+
+            const { error } = id
+                ? await sb.from('casos').update(record).eq('id', id)
+                : await sb.from('casos').insert(record);
+
+            if (error) showNotif('danger', 'Erro: ' + error.message);
+            else {
+                showNotif('success', 'Caso salvo!');
+                fecharModal('modal-caso');
+                renderCasos();
+                loadDashboard();
+            }
+        }
+
+        async function abrirModalDocumento() {
+            $('#modal-documento form').reset();
+            await populateSelect('doc-cliente', 'clientes', 'id', 'nome', '', 'Selecione um cliente');
+            await populateSelect('doc-caso', 'casos', 'id', 'numero', '', 'Nenhum');
+            $('#modal-documento').classList.add('active');
+        }
+
+        async function salvarDocumento(event) {
+            event.preventDefault();
+            const file = $('#doc-file').files[0];
+            const titulo = $('#doc-titulo').value;
+            const clienteId = $('#doc-cliente').value;
+            if (!file || !titulo || !clienteId) return showNotif('danger', 'Cliente, título e arquivo são obrigatórios.');
+
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) return showNotif('danger', 'Usuário não autenticado.');
+
+            const sanitizedFileName = file.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_').replace(/__+/g, '_');
+            const filePath = `${user.id}/${Date.now()}-${sanitizedFileName}`;
+
+            const { error: uploadError } = await sb.storage.from('documentos').upload(filePath, file);
+            if (uploadError) {
+                console.error("Erro no Upload:", uploadError);
+                return showNotif('danger', 'Erro no upload: ' + uploadError.message);
+            }
+
+            const record = {
+                cliente_id: clienteId,
+                caso_id: $('#doc-caso').value || null,
+                titulo: titulo,
+                nome_arquivo: file.name,
+                path_arquivo: filePath,
+                tipo_arquivo: file.type,
+            };
+            const { error: dbError } = await sb.from('docs').insert(record);
+            if (dbError) {
+                await sb.storage.from('documentos').remove([filePath]);
+                showNotif('danger', 'Erro ao salvar no banco: ' + dbError.message);
+            } else {
+                showNotif('success', 'Documento salvo!');
+                fecharModal('modal-documento');
+                renderDocumentos();
+            }
+        }
+
+        async function downloadDoc(id) {
+            const { data: doc, error: findError } = await sb.from('docs').select('path_arquivo, nome_arquivo').eq('id', id).single();
+            if (findError || !doc) return showNotif('danger', 'Arquivo não encontrado.');
+
+            const { data, error: downloadError } = await sb.storage.from('documentos').download(doc.path_arquivo);
+            if (downloadError) return showNotif('danger', 'Erro no download: ' + downloadError.message);
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(data);
+            link.download = doc.nome_arquivo;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        async function abrirModalEvento(id = null) {
+            if (!id) {
+                $('#modal-evento form').reset();
+                $('#evento-id').value = '';
+                $('#evento-modal-titulo').innerText = 'Novo Evento / Prazo';
+            }
+            await populateSelect('evento-cliente', 'clientes', 'id', 'nome', '', 'Nenhum');
+            $('#evento-caso').innerHTML = '<option value="">Nenhum</option>';
+            if (id) {
+                const { data: r } = await sb.from('agenda').select('*').eq('id', id).single();
+                if (!r) return showNotif('danger', 'Evento não encontrado.');
+                $('#evento-modal-titulo').innerText = 'Editar Evento';
+                $('#evento-id').value = r.id;
+                $('#evento-titulo').value = r.titulo;
+                $('#evento-datahora').value = r.datahora ? r.datahora.slice(0, 16) : '';
+                $('#evento-status').value = r.status;
+                $('#evento-descricao').value = r.descricao;
+                $('#evento-tipo').value = r.tipo_evento;
+                $('#evento-local').value = r.local;
+                if (r.cliente_id) {
+                    await populateSelect('evento-cliente', 'clientes', 'id', 'nome', '', 'Nenhum', r.cliente_id);
+                    await populateSelect('evento-caso', 'casos', 'id', 'numero', `cliente_id.eq.${r.cliente_id}`, 'Nenhum', r.caso_id);
+                }
+            }
+            $('#modal-evento').classList.add('active');
+        }
+
+        async function salvarEvento(event) {
+            event.preventDefault();
+            const id = $('#evento-id').value;
+            const record = {
+                cliente_id: $('#evento-cliente').value || null,
+                caso_id: $('#evento-caso').value || null,
+                titulo: $('#evento-titulo').value,
+                datahora: $('#evento-datahora').value,
+                status: $('#evento-status').value,
+                descricao: $('#evento-descricao').value,
+                tipo_evento: $('#evento-tipo').value,
+                local: $('#evento-local').value
+            };
+            if (!record.titulo || !record.datahora || !record.tipo_evento) return showNotif('danger', 'Título, Data/Hora e Tipo são obrigatórios.');
+
+            const { error } = id
+                ? await sb.from('agenda').update(record).eq('id', id)
+                : await sb.from('agenda').insert(record);
+
+            if (error) showNotif('danger', 'Erro: ' + error.message);
+            else {
+                showNotif('success', 'Evento salvo!');
+                fecharModal('modal-evento');
+                renderAgenda();
+                loadDashboard();
+            }
+        }
+
+        async function abrirModalTarefa(id = null) {
+            if (!id) {
+                $('#modal-tarefa form').reset();
+                $('#tarefa-id').value = '';
+                $('#tarefa-modal-titulo').innerText = 'Nova Tarefa';
+            }
+            await populateSelect('tarefa-cliente', 'clientes', 'id', 'nome', '', 'Nenhum');
+            $('#tarefa-caso').innerHTML = '<option value="">Nenhum</option>';
+            if (id) {
+                const { data: r } = await sb.from('tarefas').select('*').eq('id', id).single();
+                if (!r) return showNotif('danger', 'Tarefa não encontrada.');
+                $('#tarefa-modal-titulo').innerText = 'Editar Tarefa';
+                $('#tarefa-id').value = r.id;
+                $('#tarefa-descricao').value = r.descricao;
+                $('#tarefa-prioridade').value = r.prioridade;
+                $('#tarefa-prazo').value = r.prazo_data;
+                if (r.cliente_id) {
+                    await populateSelect('tarefa-cliente', 'clientes', 'id', 'nome', '', 'Nenhum', r.cliente_id);
+                    await populateSelect('tarefa-caso', 'casos', 'id', 'numero', `cliente_id.eq.${r.cliente_id}`, 'Nenhum', r.caso_id);
+                }
+            }
+            $('#modal-tarefa').classList.add('active');
+        }
+
+        async function salvarTarefa(event) {
+            event.preventDefault();
+            const id = $('#tarefa-id').value;
+            const record = {
+                descricao: $('#tarefa-descricao').value,
+                prioridade: $('#tarefa-prioridade').value,
+                prazo_data: $('#tarefa-prazo').value || null,
+                cliente_id: $('#tarefa-cliente').value || null,
+                caso_id: $('#tarefa-caso').value || null,
+                status: 'Pendente'
+            };
+            if (!record.descricao) return showNotif('danger', 'A descrição da tarefa é obrigatória.');
+
+            const query = id
+                ? sb.from('tarefas').update({ descricao: record.descricao, prioridade: record.prioridade, prazo_data: record.prazo_data, cliente_id: record.cliente_id, caso_id: record.caso_id }).eq('id', id)
+                : sb.from('tarefas').insert(record);
+
+            const { error } = await query;
+
+            if (error) {
+                console.error("Erro ao salvar tarefa:", error);
+                showNotif('danger', 'Erro: ' + error.message);
+            } else {
+                showNotif('success', 'Tarefa salva!');
+                fecharModal('modal-tarefa');
+                renderTarefas();
+                loadDashboard();
+            }
+        }
+
+        async function concluirTarefa(id, isChecked) {
+            const newStatus = isChecked ? 'Concluída' : 'Pendente';
+            const { error } = await sb.from('tarefas').update({ status: newStatus }).eq('id', id);
+            if (error) showNotif('danger', `Erro ao atualizar tarefa: ${error.message}`);
+            else {
+                showNotif('success', `Tarefa marcada como ${newStatus.toLowerCase()}.`);
+                renderTarefas();
+                loadDashboard();
+            }
+        }
+
+        async function abrirModalFin(tipo, id = null) {
+            $('#modal-fin form').reset();
+            $('#fin-id').value = '';
+            $('#fin-tipo').value = tipo;
+            $('#fin-titulo').innerText = tipo === 'Receber' ? 'Registrar Receita' : 'Registrar Despesa';
+            await populateSelect('fin-cliente', 'clientes', 'id', 'nome', '', 'Nenhum');
+            $('#fin-caso').innerHTML = '<option value="">Nenhum</option>';
+            if (id) {
+                const { data: r } = await sb.from('fin').select('*').eq('id', id).single();
+                if (!r) return showNotif('danger', 'Lançamento não encontrado.');
+                $('#fin-id').value = r.id;
+                $('#fin-descricao').value = r.descricao;
+                $('#fin-categoria').value = r.categoria;
+                $('#fin-valor').value = r.valor;
+                $('#fin-data').value = r.data;
+                $('#fin-status').value = r.status_pg;
+                if (r.cliente_id) {
+                    await populateSelect('fin-cliente', 'clientes', 'id', 'nome', '', 'Nenhum', r.cliente_id);
+                    await populateSelect('fin-caso', 'casos', 'id', 'numero', `cliente_id.eq.${r.cliente_id}`, 'Nenhum', r.caso_id);
+                }
+            } else {
+                $('#fin-data').valueAsDate = new Date();
+            }
+            $('#modal-fin').classList.add('active');
+        }
+
+        async function salvarFin(event) {
+            event.preventDefault();
+            const id = $('#fin-id').value;
+            const record = {
+                tipo: $('#fin-tipo').value,
+                valor: $('#fin-valor').value,
+                data: $('#fin-data').value,
+                descricao: $('#fin-descricao').value,
+                categoria: $('#fin-categoria').value,
+                status_pg: $('#fin-status').value,
+                cliente_id: $('#fin-cliente').value || null,
+                caso_id: $('#fin-caso').value || null
+            };
+            if (!record.valor || !record.data || !record.descricao) return showNotif('danger', 'Descrição, Valor e Data são obrigatórios.');
+
+            const { error } = id
+                ? await sb.from('fin').update(record).eq('id', id)
+                : await sb.from('fin').insert(record);
+
+            if (error) showNotif('danger', 'Erro: ' + error.message);
+            else {
+                showNotif('success', 'Lançamento salvo!');
+                fecharModal('modal-fin');
+                loadFinanceiro();
+                loadDashboard();
+            }
+        }
+
+        async function exportarDados(tableName) {
+            const { data, error } = await sb.from(tableName).select('*');
+            if (error || !data || !data.length) {
+                showNotif('info', 'Não há dados para exportar.');
+                return;
+            }
+            const columns = Object.keys(data[0]);
+            let csvContent = "data:text/csv;charset=utf-8," + columns.join(";") + "\n";
+            csvContent += data.map(row => columns.map(col => `"${row[col]}"`).join(";")).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `${tableName}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        /* ------------- CONTROLE DO SIDEBAR ------------- */
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        hamburgerMenu.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        /* ------------- INICIALIZAÇÃO ------------- */
+        document.addEventListener('DOMContentLoaded', () => {
+            // Event listeners para login, etc.
+            $('#btnLogin').addEventListener('click', handleLogin);
+            $('#btnLogout').addEventListener('click', handleLogout);
+            $('#btnCriarConta').addEventListener('click', () => showNotif('info', 'Funcionalidade de criar conta ainda não implementada.'));
+
+            // Checa a sessão do usuário ao carregar
+            checkUserSession();
+
+            // Fecha modais ao clicar no fundo
+            $$('.modal-bg').forEach(bg => {
+                bg.addEventListener('click', (e) => {
+                    if (e.target === bg) {
+                        fecharModal(bg.id);
+                    }
+                });
+            });
+        });
+
+        /* ------------- AUTENTICAÇÃO ------------- */
+        async function checkUserSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                $('#login-panel').style.display = 'none';
+                $('#app').style.display = 'block';
+                abrirTab(0); // Abre a primeira tab ao carregar
+            } else {
+                $('#login-panel').style.display = 'block';
+                $('#app').style.display = 'none';
+            }
+        }
+
+        async function handleLogin() {
+            const email = $('#login-email').value;
+            const password = $('#login-senha').value;
+            const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                $('#login-erro').innerText = 'E-mail ou senha inválidos.';
+                $('#login-erro').style.display = 'block';
+            } else {
+                $('#login-erro').style.display = 'none';
+                checkUserSession();
+            }
+        }
+
+        async function handleLogout() {
+            const { error } = await sb.auth.signOut();
+            if (error) {
+                showNotif('danger', 'Erro ao fazer logout.');
+            } else {
+                checkUserSession();
+            }
+        }
+
+    </script>
+</body>
+
+</html>
