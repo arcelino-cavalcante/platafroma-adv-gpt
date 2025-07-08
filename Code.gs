@@ -8,24 +8,33 @@ function getSheet_(name) {
 function getRows(sheetName) {
   const sheet = getSheet_(sheetName);
   const data = sheet.getDataRange().getValues();
-  const headers = data.shift();
+  const rawHeaders = data.shift();
+  // Normaliza cabeçalhos para letras minúsculas
+  const headers = rawHeaders.map(h => String(h).toLowerCase());
   return data.map(row => headers.reduce((o, h, i) => (o[h] = row[i], o), {}));
 }
 
 function addRow(sheetName, row) {
   const sheet = getSheet_(sheetName);
-  const headers = sheet.getDataRange().getValues()[0];
+  const rawHeaders = sheet.getDataRange().getValues()[0];
+  const headers = rawHeaders.map(h => String(h).toLowerCase());
+
+  // Converte as chaves do objeto recebido para letras minúsculas
+  const lowerRow = Object.keys(row).reduce((acc, k) => {
+    acc[String(k).toLowerCase()] = row[k];
+    return acc;
+  }, {});
 
   // Atribui um ID incremental se a planilha possuir a coluna "id" e o valor
   // ainda não tiver sido definido no objeto recebido.
   const idIdx = headers.indexOf('id');
-  if (idIdx > -1 && !row.id) {
+  if (idIdx > -1 && !lowerRow.id) {
     // getLastRow retorna o número da última linha com dados. Como a primeira
     // linha contém os cabeçalhos, o próximo ID corresponde a lastRow.
-    row.id = sheet.getLastRow();
+    lowerRow.id = sheet.getLastRow();
   }
 
-  const values = headers.map(h => row[h] || '');
+  const values = headers.map(h => lowerRow[h] || '');
   sheet.appendRow(values);
   return { success: true };
 }
@@ -40,7 +49,8 @@ function uploadDocument(name, base64) {
 function login(email, senha) {
   const sheet = getSheet_('user');
   const data = sheet.getDataRange().getValues();
-  const headers = data.shift();
+  const rawHeaders = data.shift();
+  const headers = rawHeaders.map(h => String(h).toLowerCase());
   const emailIdx = headers.indexOf('email');
   const senhaIdx = headers.indexOf('senha');
   if (emailIdx === -1 || senhaIdx === -1) {
