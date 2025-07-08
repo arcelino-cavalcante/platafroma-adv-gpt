@@ -1,5 +1,5 @@
-const SPREADSHEET_ID = 'PASTE_SPREADSHEET_ID';
-const DOCS_FOLDER_ID = 'PASTE_DRIVE_FOLDER_ID';
+const SPREADSHEET_ID = '1qYVdV65Uun2YhsJKU7Cy79lKcUYD3I_oAGd7G5tQs6A';
+const DOCS_FOLDER_ID = '1JnSYQu0o1NvEerJyWPS1pdm7aWgGSx_C';
 
 function getSheet_(name) {
   return SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(name);
