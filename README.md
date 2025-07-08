@@ -17,3 +17,15 @@ e os documentos ficam em uma pasta no Google Drive.
    `DOCS_FOLDER_ID` com os IDs correspondentes.
 4. Publique o projeto como aplicativo da Web ou use a extensão do Apps Script
    para serviço de backend.
+
+## Estrutura das abas
+O sistema espera que cada aba da planilha possua as seguintes colunas (todas em
+letras minúsculas):
+
+- **user**: `email`, `senha`
+- **clientes**: `id`, `nome`, `email`, `fone`, `notas`
+- **casos**: `id`, `cliente_id`, `numero`, `partes`, `responsavel`, `data`, `status`
+- **docs**: `id`, `cliente_id`, `caso_id`, `titulo`, `file_id`, `file_nome`, `file_url`
+- **agenda**: `id`, `titulo`, `tipo_evento`, `datahora`, `local`, `cliente_id`, `caso_id`, `status`, `descricao`
+- **tarefas**: `id`, `descricao`, `prioridade`, `prazo`, `cliente_id`, `caso_id`, `status`
+- **fin**: `id`, `descricao`, `categoria`, `valor`, `data`, `status_pg`, `cliente_id`, `caso_id`, `tipo`
