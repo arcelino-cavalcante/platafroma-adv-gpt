@@ -1338,6 +1338,12 @@
             });
         }
 
+        function gsLogin(email, senha) {
+            return new Promise((res, rej) => {
+                google.script.run.withSuccessHandler(res).withFailureHandler(rej).login(email, senha);
+            });
+        }
+
         // -- INSTÂNCIAS DOS GRÁFICOS --
         let overviewChart, reportsChart;
 
@@ -2173,12 +2179,12 @@
         });
 
         /* ------------- AUTENTICAÇÃO ------------- */
-        async function checkUserSession() {
-            const { data: { session } } = await sb.auth.getSession();
-            if (session) {
+        function checkUserSession() {
+            const logged = localStorage.getItem('userLoggedIn') === '1';
+            if (logged) {
                 $('#login-panel').style.display = 'none';
                 $('#app').style.display = 'block';
-                abrirTab(0); // Abre a primeira tab ao carregar
+                abrirTab(0);
             } else {
                 $('#login-panel').style.display = 'block';
                 $('#app').style.display = 'none';
@@ -2188,24 +2194,25 @@
         async function handleLogin() {
             const email = $('#login-email').value;
             const password = $('#login-senha').value;
-            const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
-            if (error) {
-                $('#login-erro').innerText = 'E-mail ou senha inválidos.';
+            try {
+                const { success } = await gsLogin(email, password);
+                if (success) {
+                    localStorage.setItem('userLoggedIn', '1');
+                    $('#login-erro').style.display = 'none';
+                    checkUserSession();
+                } else {
+                    $('#login-erro').innerText = 'E-mail ou senha inválidos.';
+                    $('#login-erro').style.display = 'block';
+                }
+            } catch (e) {
+                $('#login-erro').innerText = 'Erro ao autenticar.';
                 $('#login-erro').style.display = 'block';
-            } else {
-                $('#login-erro').style.display = 'none';
-                checkUserSession();
             }
         }
 
-        async function handleLogout() {
-            const { error } = await sb.auth.signOut();
-            if (error) {
-                showNotif('danger', 'Erro ao fazer logout.');
-            } else {
-                checkUserSession();
-            }
+        function handleLogout() {
+            localStorage.removeItem('userLoggedIn');
+            checkUserSession();
         }
 
     </script>
