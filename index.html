@@ -1646,21 +1646,78 @@
         }
 
         async function abrirModalCaso(id = null) {
-            showNotif('info', 'Funcionalidade de casos não implementada nesta versão.');
+            $('#modal-caso form').reset();
+            $('#caso-id').value = '';
+            await populateSelect('caso-cliente', 'clientes', 'id', 'nome');
+            if (id) {
+                showNotif('info', 'Edição de casos não disponível nesta versão.');
+            }
+            $('#modal-caso-titulo').innerText = 'Novo Caso';
+            $('#modal-caso').classList.add('active');
         }
 
         async function salvarCaso(event) {
             event.preventDefault();
-            showNotif('info', 'Funcionalidade de casos não implementada nesta versão.');
+            const id = $('#caso-id').value;
+            if (id) return showNotif('info', 'Edição de casos não disponível nesta versão.');
+            const record = {
+                cliente_id: $('#caso-cliente').value,
+                numero: $('#caso-numero').value,
+                partes: $('#caso-partes').value,
+                responsavel: $('#caso-responsavel').value,
+                data: $('#caso-data').value,
+                status: $('#caso-status').value
+            };
+            if (!record.cliente_id || !record.numero) return showNotif('danger', 'Cliente e nº do processo são obrigatórios.');
+            try {
+                await gsAddRow('casos', record);
+                showNotif('success', 'Caso salvo!');
+                fecharModal('modal-caso');
+                renderCasos();
+                loadDashboard();
+            } catch (e) {
+                showNotif('danger', 'Erro: ' + e.message);
+                console.error(e);
+            }
         }
 
         async function abrirModalDocumento() {
-            showNotif('info', 'Funcionalidade de documentos não implementada nesta versão.');
+            $('#modal-documento form').reset();
+            $('#doc-id').value = '';
+            await populateSelect('doc-cliente', 'clientes', 'id', 'nome');
+            await populateSelect('doc-caso', 'casos', 'id', 'numero');
+            $('#modal-documento').classList.add('active');
         }
 
         async function salvarDocumento(event) {
             event.preventDefault();
-            showNotif('info', 'Funcionalidade de documentos não implementada nesta versão.');
+            const id = $('#doc-id').value;
+            if (id) return showNotif('info', 'Edição de documentos não disponível nesta versão.');
+            const file = $('#doc-file').files[0];
+            if (!file) return showNotif('danger', 'Selecione um arquivo.');
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64 = e.target.result.split(',')[1];
+                try {
+                    const uploaded = await gsUploadDocument(file.name, base64);
+                    const record = {
+                        cliente_id: $('#doc-cliente').value,
+                        caso_id: $('#doc-caso').value,
+                        titulo: $('#doc-titulo').value,
+                        file_id: uploaded.id,
+                        file_nome: uploaded.name,
+                        file_url: uploaded.url
+                    };
+                    await gsAddRow('docs', record);
+                    showNotif('success', 'Documento salvo!');
+                    fecharModal('modal-documento');
+                    renderDocumentos();
+                } catch (err) {
+                    showNotif('danger', 'Erro: ' + err.message);
+                    console.error(err);
+                }
+            };
+            reader.readAsDataURL(file);
         }
 
         async function downloadDoc(id) {
@@ -1668,21 +1725,79 @@
         }
 
         async function abrirModalEvento(id = null) {
-            showNotif('info', 'Funcionalidade de agenda não implementada nesta versão.');
+            $('#modal-evento form').reset();
+            $('#evento-id').value = '';
+            await populateSelect('evento-cliente', 'clientes', 'id', 'nome');
+            await populateSelect('evento-caso', 'casos', 'id', 'numero');
+            if (id) {
+                showNotif('info', 'Edição de eventos não disponível nesta versão.');
+            }
+            $('#evento-modal-titulo').innerText = 'Novo Evento / Prazo';
+            $('#modal-evento').classList.add('active');
         }
 
         async function salvarEvento(event) {
             event.preventDefault();
-            showNotif('info', 'Funcionalidade de agenda não implementada nesta versão.');
+            const id = $('#evento-id').value;
+            if (id) return showNotif('info', 'Edição de eventos não disponível nesta versão.');
+            const record = {
+                titulo: $('#evento-titulo').value,
+                tipo_evento: $('#evento-tipo').value,
+                datahora: $('#evento-datahora').value,
+                local: $('#evento-local').value,
+                cliente_id: $('#evento-cliente').value,
+                caso_id: $('#evento-caso').value,
+                status: $('#evento-status').value,
+                descricao: $('#evento-descricao').value
+            };
+            if (!record.titulo || !record.datahora) return showNotif('danger', 'Título e data/hora são obrigatórios.');
+            try {
+                await gsAddRow('agenda', record);
+                showNotif('success', 'Evento salvo!');
+                fecharModal('modal-evento');
+                renderAgenda();
+                loadDashboard();
+            } catch (e) {
+                showNotif('danger', 'Erro: ' + e.message);
+                console.error(e);
+            }
         }
 
         async function abrirModalTarefa(id = null) {
-            showNotif('info', 'Funcionalidade de tarefas não implementada nesta versão.');
+            $('#modal-tarefa form').reset();
+            $('#tarefa-id').value = '';
+            await populateSelect('tarefa-cliente', 'clientes', 'id', 'nome');
+            await populateSelect('tarefa-caso', 'casos', 'id', 'numero');
+            if (id) {
+                showNotif('info', 'Edição de tarefas não disponível nesta versão.');
+            }
+            $('#tarefa-modal-titulo').innerText = 'Nova Tarefa';
+            $('#modal-tarefa').classList.add('active');
         }
 
         async function salvarTarefa(event) {
             event.preventDefault();
-            showNotif('info', 'Funcionalidade de tarefas não implementada nesta versão.');
+            const id = $('#tarefa-id').value;
+            if (id) return showNotif('info', 'Edição de tarefas não disponível nesta versão.');
+            const record = {
+                descricao: $('#tarefa-descricao').value,
+                prioridade: $('#tarefa-prioridade').value,
+                prazo: $('#tarefa-prazo').value,
+                cliente_id: $('#tarefa-cliente').value,
+                caso_id: $('#tarefa-caso').value,
+                status: 'Pendente'
+            };
+            if (!record.descricao) return showNotif('danger', 'A descrição é obrigatória.');
+            try {
+                await gsAddRow('tarefas', record);
+                showNotif('success', 'Tarefa salva!');
+                fecharModal('modal-tarefa');
+                renderTarefas();
+                loadDashboard();
+            } catch (e) {
+                showNotif('danger', 'Erro: ' + e.message);
+                console.error(e);
+            }
         }
 
         async function concluirTarefa(id, isChecked) {
@@ -1690,12 +1805,43 @@
         }
 
         async function abrirModalFin(tipo, id = null) {
-            showNotif('info', 'Funcionalidade financeira não implementada nesta versão.');
+            $('#modal-fin form').reset();
+            $('#fin-id').value = '';
+            $('#fin-tipo').value = tipo;
+            await populateSelect('fin-cliente', 'clientes', 'id', 'nome');
+            await populateSelect('fin-caso', 'casos', 'id', 'numero');
+            if (id) {
+                showNotif('info', 'Edição financeira não disponível nesta versão.');
+            }
+            $('#fin-titulo').innerText = tipo === 'Receber' ? 'Nova Receita' : 'Nova Despesa';
+            $('#modal-fin').classList.add('active');
         }
 
         async function salvarFin(event) {
             event.preventDefault();
-            showNotif('info', 'Funcionalidade financeira não implementada nesta versão.');
+            const id = $('#fin-id').value;
+            if (id) return showNotif('info', 'Edição financeira não disponível nesta versão.');
+            const record = {
+                descricao: $('#fin-descricao').value,
+                categoria: $('#fin-categoria').value,
+                valor: $('#fin-valor').value,
+                data: $('#fin-data').value,
+                status_pg: $('#fin-status').value,
+                cliente_id: $('#fin-cliente').value,
+                caso_id: $('#fin-caso').value,
+                tipo: $('#fin-tipo').value
+            };
+            if (!record.descricao || !record.valor || !record.data) return showNotif('danger', 'Preencha todos os campos obrigatórios.');
+            try {
+                await gsAddRow('fin', record);
+                showNotif('success', 'Lançamento salvo!');
+                fecharModal('modal-fin');
+                loadFinanceiro();
+                loadDashboard();
+            } catch (e) {
+                showNotif('danger', 'Erro: ' + e.message);
+                console.error(e);
+            }
         }
 
         async function exportarDados(tableName) {
