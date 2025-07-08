@@ -26,3 +26,16 @@ function uploadDocument(name, base64) {
   const file = folder.createFile(blob);
   return { id: file.getId(), name: file.getName(), url: file.getUrl() };
 }
+
+function login(email, senha) {
+  const sheet = getSheet_('user');
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift();
+  const emailIdx = headers.indexOf('email');
+  const senhaIdx = headers.indexOf('senha');
+  if (emailIdx === -1 || senhaIdx === -1) {
+    throw new Error('Sheet "user" must have columns "email" and "senha"');
+  }
+  const ok = data.some(row => row[emailIdx] == email && row[senhaIdx] == senha);
+  return { success: ok };
+}
