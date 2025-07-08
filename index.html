@@ -1307,7 +1307,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Apps Script runtime already provides google.script.run -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
     <script>
@@ -1318,10 +1318,25 @@
         const $ = (s) => document.querySelector(s);
         const $$ = (s) => document.querySelectorAll(s);
 
-        // -- CONFIGURAÇÃO DO SUPABASE --
-        const SUPABASE_URL = 'https://dcznczboecepxvhpgoic.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjem5jemJvZWNlcHh2aHBnb2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MjUzOTMsImV4cCI6MjA2NzMwMTM5M30.3mImRzhc2_CbnIIblSlYQje_O68yl1v9xiSxBX15lHE';
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // -- CONFIGURAÇÃO DO APPS SCRIPT --
+        // As operações de dados são realizadas por funções server-side em Code.gs
+        function gsGetRows(sheet) {
+            return new Promise((res, rej) => {
+                google.script.run.withSuccessHandler(res).withFailureHandler(rej).getRows(sheet);
+            });
+        }
+
+        function gsAddRow(sheet, row) {
+            return new Promise((res, rej) => {
+                google.script.run.withSuccessHandler(res).withFailureHandler(rej).addRow(sheet, row);
+            });
+        }
+
+        function gsUploadDocument(name, base64) {
+            return new Promise((res, rej) => {
+                google.script.run.withSuccessHandler(res).withFailureHandler(rej).uploadDocument(name, base64);
+            });
+        }
 
         // -- INSTÂNCIAS DOS GRÁFICOS --
         let overviewChart, reportsChart;
@@ -1507,9 +1522,19 @@
         async function renderClientes() {
             $('#tabela-clientes').innerHTML = SPINNER_HTML;
             const busca = $('#buscar-cliente').value.toLowerCase();
-            let query = sb.from('clientes').select('id, nome, email, fone');
-            if (busca) query = query.or(`nome.ilike.%${busca}%,email.ilike.%${busca}%,fone.ilike.%${busca}%`);
-            const { data, error } = await query.order('nome');
+            let data = [];
+            let error = null;
+            try {
+                data = await gsGetRows('clientes');
+                if (busca) data = data.filter(r =>
+                    (r.nome || '').toLowerCase().includes(busca) ||
+                    (r.email || '').toLowerCase().includes(busca) ||
+                    (r.fone || '').toLowerCase().includes(busca)
+                );
+                data.sort((a, b) => (a.nome > b.nome ? 1 : -1));
+            } catch (e) {
+                error = e;
+            }
 
             const table = $('#tabela-clientes');
             if (error || !data || !data.length) {
