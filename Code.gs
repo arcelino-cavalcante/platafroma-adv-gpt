@@ -14,6 +14,43 @@ function getRows(sheetName) {
   return data.map(row => headers.reduce((o, h, i) => (o[h] = row[i], o), {}));
 }
 
+function deleteRow(sheetName, id) {
+  const sheet = getSheet_(sheetName);
+  const data = sheet.getDataRange().getValues();
+  const rawHeaders = data.shift();
+  const headers = rawHeaders.map(h => String(h).toLowerCase());
+  const idIdx = headers.indexOf('id');
+  if (idIdx === -1) throw new Error('Sheet must have an id column');
+  for (let i = 0; i < data.length; i++) {
+    if (String(data[i][idIdx]) == String(id)) {
+      sheet.deleteRow(i + 2); // +2 porque cabeçalho ocupa a primeira linha
+      return { success: true };
+    }
+  }
+  return { success: false, message: 'ID not found' };
+}
+
+function updateRow(sheetName, id, row) {
+  const sheet = getSheet_(sheetName);
+  const data = sheet.getDataRange().getValues();
+  const rawHeaders = data.shift();
+  const headers = rawHeaders.map(h => String(h).toLowerCase());
+  const idIdx = headers.indexOf('id');
+  if (idIdx === -1) throw new Error('Sheet must have an id column');
+  for (let i = 0; i < data.length; i++) {
+    if (String(data[i][idIdx]) == String(id)) {
+      const rowNum = i + 2;
+      const existing = sheet.getRange(rowNum, 1, 1, headers.length).getValues()[0];
+      headers.forEach((h, j) => {
+        if (h in row) existing[j] = row[h];
+      });
+      sheet.getRange(rowNum, 1, 1, headers.length).setValues([existing]);
+      return { success: true };
+    }
+  }
+  return { success: false, message: 'ID not found' };
+}
+
 function addRow(sheetName, row) {
   const sheet = getSheet_(sheetName);
   const rawHeaders = sheet.getDataRange().getValues()[0];

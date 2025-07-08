@@ -1322,13 +1322,27 @@
         // As operações de dados são realizadas por funções server-side em Code.gs
         function gsGetRows(sheet) {
             return new Promise((res, rej) => {
-                google.script.run.withSuccessHandler(res).withFailureHandler(rej).getRows(sheet);
+                google.script.run.withSuccessHandler(data => {
+                    res(Array.isArray(data) ? data : []);
+                }).withFailureHandler(rej).getRows(sheet);
             });
         }
 
         function gsAddRow(sheet, row) {
             return new Promise((res, rej) => {
                 google.script.run.withSuccessHandler(res).withFailureHandler(rej).addRow(sheet, row);
+            });
+        }
+
+        function gsDeleteRow(sheet, id) {
+            return new Promise((res, rej) => {
+                google.script.run.withSuccessHandler(res).withFailureHandler(rej).deleteRow(sheet, id);
+            });
+        }
+
+        function gsUpdateRow(sheet, id, row) {
+            return new Promise((res, rej) => {
+                google.script.run.withSuccessHandler(res).withFailureHandler(rej).updateRow(sheet, id, row);
             });
         }
 
@@ -1403,7 +1417,7 @@
             }
 
             try {
-                const casos = await gsGetRows('casos');
+                const casos = await gsGetRows('casos') || [];
                 $('#casos-ativos').innerText = casos.filter(c => c.status === 'Ativo').length || 0;
             } catch (e) {
                 console.error('Erro ao buscar casos ativos:', e);
@@ -1411,7 +1425,7 @@
             }
 
             try {
-                const agenda = await gsGetRows('agenda');
+                const agenda = await gsGetRows('agenda') || [];
                 $('#eventos-agendados').innerText = agenda.filter(a => a.status === 'Agendado').length || 0;
             } catch (e) {
                 console.error('Erro ao buscar eventos agendados:', e);
@@ -1419,7 +1433,7 @@
             }
 
             try {
-                const fin = await gsGetRows('fin');
+                const fin = await gsGetRows('fin') || [];
                 const total = fin.reduce((s, r) => s + (r.tipo === 'Receber' && r.status_pg !== 'Pago' ? Number(r.valor || 0) : 0), 0);
                 $('#total-a-receber').innerText = fmtCurrency(total);
             } catch (e) {
@@ -1482,8 +1496,8 @@
             const busca = $('#buscar-caso').value.toLowerCase();
             const status = $('#filtro-caso-status').value;
             try {
-                let casos = await gsGetRows('casos');
-                const clientes = await gsGetRows('clientes');
+                let casos = await gsGetRows('casos') || [];
+                const clientes = await gsGetRows('clientes') || [];
                 if (status) casos = casos.filter(c => (c.status || '').toLowerCase() === status.toLowerCase());
                 if (busca) {
                     casos = casos.filter(c => {
@@ -1526,7 +1540,7 @@
             let data = [];
             let error = null;
             try {
-                data = await gsGetRows('clientes');
+                data = await gsGetRows('clientes') || [];
                 if (busca) data = data.filter(r =>
                     (r.nome || '').toLowerCase().includes(busca) ||
                     (r.email || '').toLowerCase().includes(busca) ||
@@ -1556,24 +1570,157 @@
         }
 
         async function renderDocumentos() {
-            $('#tabela-documentos').innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
-            showNotif('info', 'Funcionalidade não implementada nesta versão.');
+            $('#tabela-documentos').innerHTML = SPINNER_HTML;
+            await populateSelect('doc-filtro-cliente', 'clientes', 'id', 'nome', '', 'Filtrar por cliente', $('#doc-filtro-cliente').value);
+            await populateSelect('doc-filtro-caso', 'casos', 'id', 'numero', '', 'Filtrar por caso', $('#doc-filtro-caso').value);
+            const clienteId = $('#doc-filtro-cliente').value;
+            const casoId = $('#doc-filtro-caso').value;
+            try {
+                let docs = await gsGetRows('docs') || [];
+                const clientes = await gsGetRows('clientes') || [];
+                const casos = await gsGetRows('casos') || [];
+                if (clienteId) docs = docs.filter(d => String(d.cliente_id) === clienteId);
+                if (casoId) docs = docs.filter(d => String(d.caso_id) === casoId);
+                docs.sort((a, b) => (b.id || 0) - (a.id || 0));
+                const table = $('#tabela-documentos');
+                if (!docs.length) {
+                    table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum documento encontrado.</p>`;
+                    return;
+                }
+                table.innerHTML = `<table><thead><tr><th>Título</th><th>Cliente</th><th>Caso</th><th>Ações</th></tr></thead><tbody>
+                ${docs.map(d => {
+                    const cli = clientes.find(c => c.id == d.cliente_id) || {};
+                    const ca = casos.find(c => c.id == d.caso_id) || {};
+                    return `<tr>
+                        <td data-label="Título">${d.titulo || ''}</td>
+                        <td data-label="Cliente">${cli.nome || ''}</td>
+                        <td data-label="Caso">${ca.numero || ''}</td>
+                        <td data-label="Ações"><div class="actions">
+                            <button onclick="downloadDoc('${d.file_url}')" title="Baixar"><i class="fa fa-download"></i></button>
+                            <button onclick="delRow('docs', ${d.id}, renderDocumentos)" title="Excluir"><i class="fa fa-trash"></i></button>
+                        </div></td>
+                    </tr>`;
+                }).join('')}</tbody></table>`;
+            } catch (e) {
+                console.error('Erro ao renderizar documentos:', e);
+                $('#tabela-documentos').innerHTML = `<p style="text-align:center; padding: 2rem;">Erro ao carregar documentos.</p>`;
+            }
         }
 
         async function renderAgenda() {
-            $('#tabela-agenda').innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
-            showNotif('info', 'Funcionalidade não implementada nesta versão.');
+            $('#tabela-agenda').innerHTML = SPINNER_HTML;
+            const filtroData = $('#agenda-filtro-data').value;
+            const filtroTipo = $('#agenda-filtro-tipo').value;
+            try {
+                let agenda = await gsGetRows('agenda') || [];
+                const clientes = await gsGetRows('clientes') || [];
+                const casos = await gsGetRows('casos') || [];
+                if (filtroData) agenda = agenda.filter(a => String(a.datahora || '').startsWith(filtroData));
+                if (filtroTipo) agenda = agenda.filter(a => a.tipo_evento === filtroTipo);
+                agenda.sort((a, b) => new Date(a.datahora) - new Date(b.datahora));
+                const table = $('#tabela-agenda');
+                if (!agenda.length) {
+                    table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum evento encontrado.</p>`;
+                    return;
+                }
+                table.innerHTML = `<table><thead><tr><th>Título</th><th>Data</th><th>Cliente</th><th>Caso</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+                ${agenda.map(ev => {
+                    const cli = clientes.find(c => c.id == ev.cliente_id) || {};
+                    const ca = casos.find(c => c.id == ev.caso_id) || {};
+                    return `<tr>
+                        <td data-label="Título">${ev.titulo}</td>
+                        <td data-label="Data">${fmtDateTime(ev.datahora)}</td>
+                        <td data-label="Cliente">${cli.nome || ''}</td>
+                        <td data-label="Caso">${ca.numero || ''}</td>
+                        <td data-label="Status"><span class="badge ${ev.status}">${ev.status}</span></td>
+                        <td data-label="Ações"><div class="actions">
+                            <button onclick="abrirModalEvento(${ev.id})" title="Editar"><i class="fa fa-edit"></i></button>
+                            <button onclick="delRow('agenda', ${ev.id}, renderAgenda)" title="Excluir"><i class="fa fa-trash"></i></button>
+                        </div></td>
+                    </tr>`;
+                }).join('')}</tbody></table>`;
+            } catch (e) {
+                console.error('Erro ao renderizar agenda:', e);
+                $('#tabela-agenda').innerHTML = `<p style="text-align:center; padding: 2rem;">Erro ao carregar agenda.</p>`;
+            }
         }
 
         async function renderTarefas() {
-            $('#tabela-tarefas').innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
-            showNotif('info', 'Funcionalidade não implementada nesta versão.');
+            $('#tabela-tarefas').innerHTML = SPINNER_HTML;
+            const status = $('#filtro-tarefa-status').value;
+            const prioridade = $('#filtro-tarefa-prioridade').value;
+            try {
+                let tarefas = await gsGetRows('tarefas') || [];
+                const clientes = await gsGetRows('clientes') || [];
+                const casos = await gsGetRows('casos') || [];
+                if (status) tarefas = tarefas.filter(t => t.status === status);
+                if (prioridade) tarefas = tarefas.filter(t => t.prioridade === prioridade);
+                tarefas.sort((a, b) => new Date(a.prazo || 0) - new Date(b.prazo || 0));
+                const table = $('#tabela-tarefas');
+                if (!tarefas.length) {
+                    table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhuma tarefa encontrada.</p>`;
+                    return;
+                }
+                table.innerHTML = `<table><thead><tr><th>Descrição</th><th>Prazo</th><th>Prioridade</th><th>Cliente</th><th>Caso</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+                ${tarefas.map(t => {
+                    const cli = clientes.find(c => c.id == t.cliente_id) || {};
+                    const ca = casos.find(c => c.id == t.caso_id) || {};
+                    const checked = t.status === 'Concluída' ? 'checked' : '';
+                    return `<tr>
+                        <td data-label="Descrição">${t.descricao}</td>
+                        <td data-label="Prazo">${fmtDate(t.prazo)}</td>
+                        <td data-label="Prioridade"><span class="badge ${t.prioridade}">${t.prioridade}</span></td>
+                        <td data-label="Cliente">${cli.nome || ''}</td>
+                        <td data-label="Caso">${ca.numero || ''}</td>
+                        <td data-label="Status"><span class="badge ${t.status}">${t.status}</span></td>
+                        <td data-label="Ações"><div class="actions">
+                            <input type="checkbox" ${checked} onchange="concluirTarefa(${t.id}, this.checked)" title="Concluir">
+                            <button onclick="delRow('tarefas', ${t.id}, renderTarefas)" title="Excluir"><i class="fa fa-trash"></i></button>
+                        </div></td>
+                    </tr>`;
+                }).join('')}</tbody></table>`;
+            } catch (e) {
+                console.error('Erro ao renderizar tarefas:', e);
+                $('#tabela-tarefas').innerHTML = `<p style="text-align:center; padding: 2rem;">Erro ao carregar tarefas.</p>`;
+            }
         }
 
         async function loadFinanceiro() {
-            $('#resumo-financeiro').innerHTML = '';
-            $('#tabela-financeiro').innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
-            showNotif('info', 'Funcionalidade não implementada nesta versão.');
+            $('#resumo-financeiro').innerHTML = SPINNER_HTML;
+            $('#tabela-financeiro').innerHTML = SPINNER_HTML;
+            try {
+                const fin = await gsGetRows('fin') || [];
+                const clientes = await gsGetRows('clientes') || [];
+                const casos = await gsGetRows('casos') || [];
+                const aReceber = fin.filter(f => f.tipo === 'Receber' && f.status_pg !== 'Pago').reduce((s, f) => s + Number(f.valor || 0), 0);
+                const aPagar = fin.filter(f => f.tipo === 'Pagar' && f.status_pg !== 'Pago').reduce((s, f) => s + Number(f.valor || 0), 0);
+                $('#resumo-financeiro').innerHTML = `
+                    <div class="card"><div class="icon"><i class="fa fa-arrow-down"></i></div><div class="value">${fmtCurrency(aReceber)}</div><div class="label">A Receber</div></div>
+                    <div class="card"><div class="icon"><i class="fa fa-arrow-up"></i></div><div class="value">${fmtCurrency(aPagar)}</div><div class="label">A Pagar</div></div>
+                `;
+                fin.sort((a, b) => new Date(b.data) - new Date(a.data));
+                const table = $('#tabela-financeiro');
+                table.innerHTML = `<table><thead><tr><th>Descrição</th><th>Valor</th><th>Data</th><th>Cliente</th><th>Caso</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+                ${fin.map(f => {
+                    const cli = clientes.find(c => c.id == f.cliente_id) || {};
+                    const ca = casos.find(c => c.id == f.caso_id) || {};
+                    return `<tr>
+                        <td data-label="Descrição">${f.descricao}</td>
+                        <td data-label="Valor">${fmtCurrency(f.valor)}</td>
+                        <td data-label="Data">${fmtDate(f.data)}</td>
+                        <td data-label="Cliente">${cli.nome || ''}</td>
+                        <td data-label="Caso">${ca.numero || ''}</td>
+                        <td data-label="Status"><span class="badge ${f.status_pg}">${f.status_pg}</span></td>
+                        <td data-label="Ações"><div class="actions">
+                            <button onclick="delRow('fin', ${f.id}, loadFinanceiro)" title="Excluir"><i class="fa fa-trash"></i></button>
+                        </div></td>
+                    </tr>`;
+                }).join('')}</tbody></table>`;
+            } catch (e) {
+                console.error('Erro ao carregar financeiro:', e);
+                $('#resumo-financeiro').innerHTML = '';
+                $('#tabela-financeiro').innerHTML = `<p style="text-align:center; padding: 2rem;">Erro ao carregar dados.</p>`;
+            }
         }
 
         async function loadRelatorios() {
@@ -1584,8 +1731,22 @@
 
         async function renderCasosPorCliente() {
             const container = $('#casos-por-cliente-container');
-            container.innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
-            showNotif('info', 'Funcionalidade não implementada nesta versão.');
+            container.innerHTML = SPINNER_HTML;
+            const busca = $('#buscar-casos-por-cliente').value.toLowerCase();
+            try {
+                const clientes = await gsGetRows('clientes') || [];
+                const casos = await gsGetRows('casos') || [];
+                const filtered = busca ? clientes.filter(c => (c.nome || '').toLowerCase().includes(busca)) : clientes;
+                const html = filtered.map(cl => {
+                    const casosCliente = casos.filter(c => c.cliente_id == cl.id);
+                    if (!casosCliente.length) return '';
+                    return `<div class="cliente-card"><h3>${cl.nome}</h3><ul>${casosCliente.map(c => `<li>${c.numero} - <span class="badge ${c.status}">${c.status}</span></li>`).join('')}</ul></div>`;
+                }).join('');
+                container.innerHTML = html || '<p style="text-align:center; padding: 2rem;">Nenhum resultado encontrado.</p>';
+            } catch (e) {
+                console.error('Erro ao renderizar casos por cliente:', e);
+                container.innerHTML = '<p style="text-align:center; padding: 2rem;">Erro ao carregar dados.</p>';
+            }
         }
 
         /* ------------- LISTA DE FUNÇÕES DE RENDERIZAÇÃO ------------- */
@@ -1605,8 +1766,16 @@
         /* ------------- MODAIS E AÇÕES DE SALVAMENTO ------------- */
 
         async function delRow(tableName, id, renderCallback) {
-            showNotif('info', 'Funcionalidade de exclusão indisponível nesta versão.');
-            if (renderCallback) renderCallback();
+            if (!confirm('Excluir registro selecionado?')) return;
+            try {
+                await gsDeleteRow(tableName, id);
+                showNotif('success', 'Registro excluído.');
+                if (renderCallback) renderCallback();
+                loadDashboard();
+            } catch (e) {
+                console.error('Erro ao excluir:', e);
+                showNotif('danger', 'Erro ao excluir registro.');
+            }
         }
 
         async function abrirModalCliente(id = null) {
@@ -1721,7 +1890,7 @@
         }
 
         async function downloadDoc(id) {
-            showNotif('info', 'Funcionalidade de documentos não implementada nesta versão.');
+            if (id) window.open(id, '_blank');
         }
 
         async function abrirModalEvento(id = null) {
@@ -1801,7 +1970,14 @@
         }
 
         async function concluirTarefa(id, isChecked) {
-            showNotif('info', 'Funcionalidade de tarefas não implementada nesta versão.');
+            try {
+                await gsUpdateRow('tarefas', id, { status: isChecked ? 'Concluída' : 'Pendente' });
+                renderTarefas();
+                loadDashboard();
+            } catch (e) {
+                console.error('Erro ao concluir tarefa:', e);
+                showNotif('danger', 'Erro ao atualizar tarefa.');
+            }
         }
 
         async function abrirModalFin(tipo, id = null) {
