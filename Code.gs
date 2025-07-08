@@ -15,6 +15,16 @@ function getRows(sheetName) {
 function addRow(sheetName, row) {
   const sheet = getSheet_(sheetName);
   const headers = sheet.getDataRange().getValues()[0];
+
+  // Atribui um ID incremental se a planilha possuir a coluna "id" e o valor
+  // ainda não tiver sido definido no objeto recebido.
+  const idIdx = headers.indexOf('id');
+  if (idIdx > -1 && !row.id) {
+    // getLastRow retorna o número da última linha com dados. Como a primeira
+    // linha contém os cabeçalhos, o próximo ID corresponde a lastRow.
+    row.id = sheet.getLastRow();
+  }
+
   const values = headers.map(h => row[h] || '');
   sheet.appendRow(values);
   return { success: true };
