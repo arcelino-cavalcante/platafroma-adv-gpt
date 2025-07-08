@@ -1370,23 +1370,20 @@
         async function populateSelect(selectId, tableName, valueCol, textCol, filter = '', placeholder = 'Selecione', selectedValue = null) {
             const select = $(`#${selectId}`);
             select.innerHTML = `<option value="">${placeholder}</option>`;
-            let query = sb.from(tableName).select(`${valueCol}, ${textCol}`);
-            if (filter && filter.split('.').length === 3) {
-                const [column, op, value] = filter.split('.');
-                if (value) {
-                    query = query[op](column, value);
+            try {
+                let data = await gsGetRows(tableName);
+                if (filter && filter.split('.').length === 3) {
+                    const [column, op, value] = filter.split('.');
+                    if (value) {
+                        data = data.filter(r => op === 'eq' ? String(r[column]) === value : true);
+                    }
                 }
-            }
-            const { data, error } = await query.order(textCol);
-
-            if (error) {
-                console.error("Erro ao popular select:", error);
-                return;
-            }
-            if (data) {
+                data.sort((a, b) => (a[textCol] > b[textCol] ? 1 : -1));
                 data.forEach(r => select.innerHTML += `<option value="${r[valueCol]}">${r[textCol]}</option>`);
+                if (selectedValue) select.value = selectedValue;
+            } catch (e) {
+                console.error('Erro ao popular select:', e);
             }
-            if (selectedValue) select.value = selectedValue;
         }
 
         /* ------------- FUNÇÕES DE RENDERIZAÇÃO (COM SPINNERS) ------------- */
@@ -1397,22 +1394,38 @@
             $('#eventos-agendados').innerHTML = SPINNER_HTML;
             $('#total-a-receber').innerHTML = SPINNER_HTML;
 
-            const { count: totalClientes, error: clientesError } = await sb.from('clientes').select('id', { count: 'exact', head: true });
-            if (clientesError) console.error('Erro ao buscar total de clientes:', clientesError);
-            $('#total-clientes').innerText = totalClientes || 0;
+            try {
+                const clientes = await gsGetRows('clientes');
+                $('#total-clientes').innerText = clientes.length || 0;
+            } catch (e) {
+                console.error('Erro ao buscar total de clientes:', e);
+                $('#total-clientes').innerText = 0;
+            }
 
-            const { count: casosAtivos, error: casosError } = await sb.from('casos').select('id', { count: 'exact', head: true }).eq('status', 'Ativo');
-            if (casosError) console.error('Erro ao buscar casos ativos:', casosError);
-            $('#casos-ativos').innerText = casosAtivos || 0;
+            try {
+                const casos = await gsGetRows('casos');
+                $('#casos-ativos').innerText = casos.filter(c => c.status === 'Ativo').length || 0;
+            } catch (e) {
+                console.error('Erro ao buscar casos ativos:', e);
+                $('#casos-ativos').innerText = 0;
+            }
 
-            const { count: eventosAgendados, error: eventosError } = await sb.from('agenda').select('id', { count: 'exact', head: true }).eq('status', 'Agendado');
-            if (eventosError) console.error('Erro ao buscar eventos agendados:', eventosError);
-            $('#eventos-agendados').innerText = eventosAgendados || 0;
+            try {
+                const agenda = await gsGetRows('agenda');
+                $('#eventos-agendados').innerText = agenda.filter(a => a.status === 'Agendado').length || 0;
+            } catch (e) {
+                console.error('Erro ao buscar eventos agendados:', e);
+                $('#eventos-agendados').innerText = 0;
+            }
 
-            const { data: financas, error: finError } = await sb.rpc('get_financeiro_summary');
-            if (finError) console.error("Erro ao carregar resumo financeiro:", finError);
-            const resumo = financas && financas.length ? financas[0] : { a_receber: 0 };
-            $('#total-a-receber').innerText = fmtCurrency(resumo.a_receber);
+            try {
+                const fin = await gsGetRows('fin');
+                const total = fin.reduce((s, r) => s + (r.tipo === 'Receber' && r.status_pg !== 'Pago' ? Number(r.valor || 0) : 0), 0);
+                $('#total-a-receber').innerText = fmtCurrency(total);
+            } catch (e) {
+                console.error('Erro ao carregar resumo financeiro:', e);
+                $('#total-a-receber').innerText = fmtCurrency(0);
+            }
 
             // FullCalendar
             const calendarEl = $('#calendar');
@@ -1426,40 +1439,7 @@
                 },
                 eventOrder: 'start,title', // Ordena eventos por data/hora de início e depois por título
                 events: async (fetchInfo, successCallback, failureCallback) => {
-                    const { data: agendaData, error: agendaError } = await sb.from('agenda').select('id, titulo, datahora, tipo_evento, status');
-                    const { data: tarefasData, error: tarefasError } = await sb.from('tarefas').select('id, descricao, prazo_data, status');
-
-                    if (agendaError) {
-                        console.error('Erro ao buscar eventos da agenda:', agendaError);
-                        failureCallback(agendaError);
-                    }
-                    if (tarefasError) {
-                        console.error('Erro ao buscar tarefas:', tarefasError);
-                        failureCallback(tarefasError);
-                    }
-
-                    const events = agendaData.map(event => ({
-                        id: event.id,
-                        title: event.titulo,
-                        start: event.datahora,
-                        allDay: event.tipo_evento === 'Prazo Processual',
-                        extendedProps: { type: 'agenda' },
-                        classNames: [`status-${event.status.toLowerCase()}`] // Adiciona a classe de status
-                    }));
-
-                    tarefasData.forEach(tarefa => {
-                        if (tarefa.prazo_data) {
-                            events.push({
-                                id: tarefa.id,
-                                title: `Tarefa: ${tarefa.descricao}`,
-                                start: tarefa.prazo_data,
-                                allDay: true,
-                                extendedProps: { type: 'tarefa' },
-                                classNames: [`status-${tarefa.status.toLowerCase()}`] // Adiciona a classe de status
-                            });
-                        }
-                    });
-                    successCallback(events);
+                    successCallback([]); // agenda desativada
                 },
                 eventClick: function (info) {
                     if (info.event.extendedProps.type === 'agenda') {
@@ -1501,28 +1481,43 @@
             $('#tabela-casos').innerHTML = SPINNER_HTML;
             const busca = $('#buscar-caso').value.toLowerCase();
             const status = $('#filtro-caso-status').value;
-            let query = sb.from('casos').select(`id, numero, partes, status, clientes ( nome )`);
-            if (status) query = query.eq('status', status);
-            if (busca) query = query.or(`numero.ilike.%${busca}%,partes.ilike.%${busca}%,clientes.nome.ilike.%${busca}%`);
-            const { data, error } = await query.order('id', { ascending: false });
+            try {
+                let casos = await gsGetRows('casos');
+                const clientes = await gsGetRows('clientes');
+                if (status) casos = casos.filter(c => (c.status || '').toLowerCase() === status.toLowerCase());
+                if (busca) {
+                    casos = casos.filter(c => {
+                        const cliente = clientes.find(cl => cl.id == c.cliente_id) || {};
+                        return (c.numero || '').toLowerCase().includes(busca) ||
+                            (c.partes || '').toLowerCase().includes(busca) ||
+                            (cliente.nome || '').toLowerCase().includes(busca);
+                    });
+                }
+                casos.sort((a, b) => (b.id || 0) - (a.id || 0));
 
-            const table = $('#tabela-casos');
-            if (error || !data || !data.length) {
-                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum caso encontrado.</p>`;
-                if (error) console.error('Erro ao renderizar casos:', error);
-                return;
+                const table = $('#tabela-casos');
+                if (!casos.length) {
+                    table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum caso encontrado.</p>`;
+                    return;
+                }
+                table.innerHTML = `<table><thead><tr><th>Nº Processo</th><th>Cliente</th><th>Partes</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+                ${casos.map(r => {
+                    const cliente = clientes.find(cl => cl.id == r.cliente_id) || {};
+                    return `<tr>
+                        <td data-label="Nº Processo">${r.numero}</td>
+                        <td data-label="Cliente">${cliente.nome || ''}</td>
+                        <td data-label="Partes">${r.partes || ''}</td>
+                        <td data-label="Status"><span class="badge ${r.status}">${r.status}</span></td>
+                        <td data-label="Ações"><div class="actions">
+                            <button onclick="abrirModalCaso(${r.id})" title="Editar"><i class="fa fa-edit"></i></button>
+                            <button onclick="delRow('casos', ${r.id}, renderCasos)" title="Excluir"><i class="fa fa-trash"></i></button>
+                        </div></td>
+                    </tr>`;
+                }).join('')}</tbody></table>`;
+            } catch (e) {
+                console.error('Erro ao renderizar casos:', e);
+                $('#tabela-casos').innerHTML = `<p style="text-align:center; padding: 2rem;">Erro ao carregar casos.</p>`;
             }
-            table.innerHTML = `<table><thead><tr><th>Nº Processo</th><th>Cliente</th><th>Partes</th><th>Status</th><th>Ações</th></tr></thead><tbody>
-            ${data.map(r => `<tr>
-                <td data-label="Nº Processo">${r.numero}</td>
-                <td data-label="Cliente">${r.clientes.nome}</td>
-                <td data-label="Partes">${r.partes || ''}</td>
-                <td data-label="Status"><span class="badge ${r.status}">${r.status}</span></td>
-                <td data-label="Ações"><div class="actions">
-                    <button onclick="abrirModalCaso(${r.id})" title="Editar"><i class="fa fa-edit"></i></button>
-                    <button onclick="delRow('casos', ${r.id}, renderCasos)" title="Excluir"><i class="fa fa-trash"></i></button>
-                </div></td>
-            </tr>`).join('')}</tbody></table>`;
         }
 
         async function renderClientes() {
@@ -1561,198 +1556,36 @@
         }
 
         async function renderDocumentos() {
-            $('#tabela-documentos').innerHTML = SPINNER_HTML;
-            const clienteId = $('#doc-filtro-cliente').value;
-            const casoId = $('#doc-filtro-caso').value;
-            let query = sb.from('docs').select(`id, titulo, data, nome_arquivo, clientes (nome), casos (numero)`);
-            if (clienteId) query = query.eq('cliente_id', clienteId);
-            if (casoId) query = query.eq('caso_id', casoId);
-            const { data, error } = await query.order('id', { ascending: false });
-
-            const table = $('#tabela-documentos');
-            if (error || !data || !data.length) {
-                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum documento encontrado.</p>`;
-                if (error) console.error('Erro ao renderizar documentos:', error);
-                return;
-            }
-            table.innerHTML = `<table><thead><tr><th>Título</th><th>Cliente</th><th>Caso</th><th>Data</th><th>Arquivo</th><th>Ações</th></tr></thead><tbody>
-            ${data.map(r => `<tr>
-                <td data-label="Título">${r.titulo}</td>
-                <td data-label="Cliente">${r.clientes?.nome || 'N/A'}</td>
-                <td data-label="Caso">${r.casos?.numero || 'N/A'}</td>
-                <td data-label="Data">${fmtDate(r.data)}</td>
-                <td data-label="Arquivo">${r.nome_arquivo}</td>
-                <td data-label="Ações"><div class="actions">
-                    <button onclick="downloadDoc(${r.id})" title="Baixar"><i class="fa fa-download"></i></button>
-                    <button onclick="delRow('docs', ${r.id}, renderDocumentos)" title="Excluir"><i class="fa fa-trash"></i></button>
-                </div></td>
-            </tr>`).join('')}</tbody></table>`;
+            $('#tabela-documentos').innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
+            showNotif('info', 'Funcionalidade não implementada nesta versão.');
         }
 
         async function renderAgenda() {
-            $('#tabela-agenda').innerHTML = SPINNER_HTML;
-            const dataFiltro = $('#agenda-filtro-data').value;
-            const tipoFiltro = $('#agenda-filtro-tipo').value;
-            let query = sb.from('agenda').select(`id, titulo, datahora, status, tipo_evento, local, clientes(nome), casos(numero)`);
-            if (dataFiltro) {
-                const dataFim = new Date(dataFiltro);
-                dataFim.setDate(dataFim.getDate() + 1);
-                query = query.gte('datahora', dataFiltro).lt('datahora', dataFim.toISOString().split('T')[0]);
-            }
-            if (tipoFiltro) query = query.eq('tipo_evento', tipoFiltro);
-            const { data, error } = await query.order('datahora', { ascending: false });
-
-            const table = $('#tabela-agenda');
-            if (error || !data || !data.length) {
-                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum evento encontrado.</p>`;
-                if (error) console.error('Erro ao renderizar agenda:', error);
-                return;
-            }
-            table.innerHTML = `<table><thead><tr><th>Evento/Prazo</th><th>Tipo</th><th>Cliente/Caso</th><th>Data/Hora</th><th>Status</th><th>Ações</th></tr></thead><tbody>
-            ${data.map(r => `<tr>
-                <td data-label="Evento">${r.titulo}</td>
-                <td data-label="Tipo">${r.tipo_evento}</td>
-                <td data-label="Cliente/Caso">${r.clientes?.nome || ''}${r.casos?.numero ? ` / ${r.casos.numero}` : ''}</td>
-                <td data-label="Data/Hora">${fmtDateTime(r.datahora)}</td>
-                <td data-label="Status"><span class="badge ${r.status}">${r.status}</span></td>
-                <td data-label="Ações"><div class="actions">
-                    <button onclick="abrirModalEvento(${r.id})" title="Editar"><i class="fa fa-edit"></i></button>
-                    <button onclick="delRow('agenda', ${r.id}, renderAgenda)" title="Excluir"><i class="fa fa-trash"></i></button>
-                </div></td>
-            </tr>`).join('')}</tbody></table>`;
+            $('#tabela-agenda').innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
+            showNotif('info', 'Funcionalidade não implementada nesta versão.');
         }
 
         async function renderTarefas() {
-            $('#tabela-tarefas').innerHTML = SPINNER_HTML;
-            const status = $('#filtro-tarefa-status').value;
-            const prioridade = $('#filtro-tarefa-prioridade').value;
-            let query = sb.from('tarefas').select(`id, descricao, status, prioridade, prazo_data, clientes(nome), casos(numero)`);
-            if (status) query = query.eq('status', status);
-            if (prioridade) query = query.eq('prioridade', prioridade);
-            const { data, error } = await query.order('id', { ascending: false });
-
-            const table = $('#tabela-tarefas');
-            if (error || !data || !data.length) {
-                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhuma tarefa encontrada.</p>`;
-                if (error) console.error('Erro ao renderizar tarefas:', error);
-                return;
-            }
-            table.innerHTML = `<table><thead><tr><th></th><th>Descrição</th><th>Cliente/Caso</th><th>Prazo</th><th>Prioridade</th><th>Ações</th></tr></thead><tbody>
-            ${data.map(r => `<tr>
-                <td data-label="Status"><input type="checkbox" onchange="concluirTarefa(${r.id}, this.checked)" ${r.status === 'Concluída' ? 'checked' : ''}></td>
-                <td data-label="Descrição" style="${r.status === 'Concluída' ? 'text-decoration:line-through; color:var(--muted-text)' : ''}">${r.descricao}</td>
-                <td data-label="Cliente/Caso">${r.clientes?.nome || ''}${r.casos?.numero ? ` / ${r.casos.numero}` : ''}</td>
-                <td data-label="Prazo">${fmtDate(r.prazo_data)}</td>
-                <td data-label="Prioridade"><span class="badge ${r.prioridade}">${r.prioridade}</span></td>
-                <td data-label="Ações"><div class="actions">
-                    <button onclick="abrirModalTarefa(${r.id})" title="Editar"><i class="fa fa-edit"></i></button>
-                    <button onclick="delRow('tarefas', ${r.id}, renderTarefas)" title="Excluir"><i class="fa fa-trash"></i></button>
-                </div></td>
-            </tr>`).join('')}</tbody></table>`;
+            $('#tabela-tarefas').innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
+            showNotif('info', 'Funcionalidade não implementada nesta versão.');
         }
 
         async function loadFinanceiro() {
-            $('#resumo-financeiro').innerHTML = SPINNER_HTML;
-            $('#tabela-financeiro').innerHTML = SPINNER_HTML;
-            const { data: financas, error: finError } = await sb.rpc('get_financeiro_summary');
-            if (finError) console.error("Erro ao carregar resumo financeiro:", finError);
-
-            const resumo = financas && financas.length ? financas[0] : { total_realizado: 0, total_despesas: 0, a_receber: 0 };
-
-            $('#resumo-financeiro').innerHTML = `
-                <div class="card"><i class="icon fa fa-arrow-up" style="color:var(--success)"></i><div class="value">${fmtCurrency(resumo.total_realizado)}</div><div class="label">Total Realizado</div></div>
-                <div class="card"><i class="icon fa fa-arrow-down" style="color:var(--danger)"></i><div class="value">${fmtCurrency(resumo.total_despesas)}</div><div class="label">Total Despesas</div></div>
-                <div class="card"><i class="icon fa fa-balance-scale" style="color:var(--info)"></i><div class="value">${fmtCurrency(resumo.total_realizado - resumo.total_despesas)}</div><div class="label">Saldo</div></div>
-                <div class="card"><i class="icon fa fa-hourglass-half" style="color:var(--warning)"></i><div class="value">${fmtCurrency(resumo.a_receber)}</div><div class="label">A Receber</div></div>
-            `;
-
-            const { data, error } = await sb.from('fin').select(`*, clientes(nome), casos(numero)`).order('data', { ascending: false });
-            const table = $('#tabela-financeiro');
-            if (error || !data || !data.length) {
-                table.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum lançamento financeiro.</p>`;
-                if (error) console.error('Erro ao renderizar financeiro:', error);
-                return;
-            }
-            table.innerHTML = `<table><thead><tr><th>Descrição</th><th>Cliente/Caso</th><th>Data</th><th>Categoria</th><th>Status</th><th>Valor</th><th>Ações</th></tr></thead><tbody>
-            ${data.map(r => `<tr>
-                <td data-label="Descrição">${r.descricao} <span class="badge ${r.tipo}">${r.tipo}</span></td>
-                <td data-label="Cliente/Caso">${r.clientes?.nome || ''}${r.casos?.numero ? ` / ${r.casos.numero}` : ''}</td>
-                <td data-label="Data">${fmtDate(r.data)}</td>
-                <td data-label="Categoria">${r.categoria}</td>
-                <td data-label="Status"><span class="badge ${r.status_pg}">${r.status_pg}</span></td>
-                <td data-label="Valor" style="color:${r.tipo === 'Receber' ? 'var(--success)' : 'var(--danger)'}; font-weight:600;">${fmtCurrency(r.valor)}</td>
-                <td data-label="Ações"><div class="actions">
-                    <button onclick="abrirModalFin('${r.tipo}', ${r.id})" title="Editar"><i class="fa fa-edit"></i></button>
-                    <button onclick="delRow('fin', ${r.id}, loadFinanceiro)" title="Excluir"><i class="fa fa-trash"></i></button>
-                </div></td>
-            </tr>`).join('')}</tbody></table>`;
+            $('#resumo-financeiro').innerHTML = '';
+            $('#tabela-financeiro').innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
+            showNotif('info', 'Funcionalidade não implementada nesta versão.');
         }
 
         async function loadRelatorios() {
             const chartContainer = $('#chart-relatorio').parentElement;
-            chartContainer.innerHTML = SPINNER_HTML;
-            const { data, error } = await sb.rpc('get_relatorio_financeiro');
-            chartContainer.innerHTML = '<canvas id="chart-relatorio"></canvas>'; // Recria o canvas
-            if (error) console.error('Erro ao carregar dados do relatório:', error);
-
-            const labels = data ? data.map(r => r.mes) : [];
-            const receitas = data ? data.map(r => r.receitas) : [];
-            const despesas = data ? data.map(r => r.despesas) : [];
-
-            const ctx = $('#chart-relatorio').getContext('2d');
-            if (reportsChart) reportsChart.destroy();
-            reportsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [
-                        { label: 'Receitas', data: receitas, backgroundColor: 'rgba(16, 185, 129, 0.7)' },
-                        { label: 'Despesas', data: despesas, backgroundColor: 'rgba(239, 68, 68, 0.7)' }
-                    ]
-                },
-                options: { scales: { y: { beginAtZero: true } } }
-            });
+            chartContainer.innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
+            showNotif('info', 'Funcionalidade não implementada nesta versão.');
         }
 
         async function renderCasosPorCliente() {
             const container = $('#casos-por-cliente-container');
-            container.innerHTML = SPINNER_HTML;
-            const busca = $('#buscar-casos-por-cliente').value.toLowerCase();
-            let query = sb.from('clientes').select(`id, nome, casos ( numero, status )`);
-            if (busca) {
-                query = query.ilike('nome', `%${busca}%`);
-            }
-            const { data: clientes, error } = await query.order('nome');
-
-            if (error) {
-                container.innerHTML = `<p>Erro ao carregar: ${error.message}</p>`;
-                return;
-            }
-            if (!clientes || !clientes.length) {
-                container.innerHTML = `<p style="text-align:center; padding: 2rem;">Nenhum cliente encontrado.</p>`;
-                return;
-            }
-
-            container.innerHTML = '';
-            clientes.forEach(cliente => {
-                const card = document.createElement('div');
-                card.className = 'cliente-card';
-                let casosHtml = '<p>Nenhum caso registrado para este cliente.</p>';
-                if (cliente.casos.length > 0) {
-                    casosHtml = `<div class="table-wrapper"><table>
-                        <thead><tr><th>Nº do Processo</th><th>Status</th></tr></thead>
-                        <tbody>
-                            ${cliente.casos.map(caso => `
-                                <tr>
-                                    <td data-label="Nº do Processo">${caso.numero}</td>
-                                    <td data-label="Status"><span class="badge ${caso.status}">${caso.status}</span></td>
-                                </tr>`).join('')}
-                        </tbody>
-                    </table></div>`;
-                }
-                card.innerHTML = `<h3>${cliente.nome}</h3>${casosHtml}`;
-                container.appendChild(card);
-            });
+            container.innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
+            showNotif('info', 'Funcionalidade não implementada nesta versão.');
         }
 
         /* ------------- LISTA DE FUNÇÕES DE RENDERIZAÇÃO ------------- */
@@ -1772,43 +1605,17 @@
         /* ------------- MODAIS E AÇÕES DE SALVAMENTO ------------- */
 
         async function delRow(tableName, id, renderCallback) {
-            if (confirm("Tem certeza que deseja excluir este registro? A ação não pode ser desfeita.")) {
-                if (tableName === 'docs') {
-                    try {
-                        const { data: doc } = await sb.from('docs').select('path_arquivo').eq('id', id).single();
-                        if (doc && doc.path_arquivo) {
-                            await sb.storage.from('documentos').remove([doc.path_arquivo]);
-                        }
-                    } catch (e) { console.error("Documento não encontrado no storage, prosseguindo."); }
-                }
-
-                const { error } = await sb.from(tableName).delete().eq('id', id);
-                if (error) {
-                    showNotif('danger', 'Erro ao excluir: ' + error.message);
-                    console.error(error);
-                } else {
-                    showNotif('success', 'Registro excluído.');
-                    if (renderCallback) renderCallback();
-                    if (['casos', 'clientes', 'tarefas', 'agenda', 'fin'].includes(tableName)) loadDashboard();
-                }
-            }
+            showNotif('info', 'Funcionalidade de exclusão indisponível nesta versão.');
+            if (renderCallback) renderCallback();
         }
 
         async function abrirModalCliente(id = null) {
             $('#modal-cliente form').reset();
             $('#cliente-id').value = '';
             if (id) {
-                const { data: r } = await sb.from('clientes').select('*').eq('id', id).single();
-                if (!r) return showNotif('danger', 'Cliente não encontrado.');
-                $('#modal-cliente-titulo').innerText = 'Editar Cliente';
-                $('#cliente-id').value = r.id;
-                $('#cliente-nome').value = r.nome;
-                $('#cliente-email').value = r.email;
-                $('#cliente-fone').value = r.fone;
-                $('#cliente-notas').value = r.notas;
-            } else {
-                $('#modal-cliente-titulo').innerText = 'Novo Cliente';
+                showNotif('info', 'Edição de clientes não disponível nesta versão.');
             }
+            $('#modal-cliente-titulo').innerText = id ? 'Editar Cliente' : 'Novo Cliente';
             $('#modal-cliente').classList.add('active');
         }
 
@@ -1823,319 +1630,76 @@
             };
             if (!record.nome) return showNotif('danger', 'O nome do cliente é obrigatório.');
 
-            const { error } = id
-                ? await sb.from('clientes').update(record).eq('id', id)
-                : await sb.from('clientes').insert(record);
-
-            if (error) showNotif('danger', 'Erro: ' + error.message);
-            else {
+            if (id) {
+                return showNotif('info', 'Edição de clientes não disponível nesta versão.');
+            }
+            try {
+                await gsAddRow('clientes', record);
                 showNotif('success', 'Cliente salvo!');
                 fecharModal('modal-cliente');
                 renderClientes();
                 loadDashboard();
+            } catch (e) {
+                showNotif('danger', 'Erro: ' + e.message);
+                console.error(e);
             }
         }
 
         async function abrirModalCaso(id = null) {
-            $('#modal-caso form').reset();
-            $('#caso-id').value = '';
-            await populateSelect('caso-cliente', 'clientes', 'id', 'nome', '', 'Selecione um cliente');
-            if (id) {
-                const { data: r } = await sb.from('casos').select('*').eq('id', id).single();
-                if (!r) return showNotif('danger', 'Caso não encontrado.');
-                $('#modal-caso-titulo').innerText = 'Editar Caso';
-                $('#caso-id').value = r.id;
-                $('#caso-cliente').value = r.cliente_id;
-                $('#caso-numero').value = r.numero;
-                $('#caso-partes').value = r.partes;
-                $('#caso-responsavel').value = r.responsavel;
-                $('#caso-data').value = r.data;
-                $('#caso-status').value = r.status;
-            } else {
-                $('#modal-caso-titulo').innerText = 'Novo Caso';
-                $('#caso-data').valueAsDate = new Date();
-            }
-            $('#modal-caso').classList.add('active');
+            showNotif('info', 'Funcionalidade de casos não implementada nesta versão.');
         }
 
         async function salvarCaso(event) {
             event.preventDefault();
-            const id = $('#caso-id').value;
-            const record = {
-                cliente_id: $('#caso-cliente').value,
-                numero: $('#caso-numero').value,
-                partes: $('#caso-partes').value,
-                responsavel: $('#caso-responsavel').value,
-                data: $('#caso-data').value,
-                status: $('#caso-status').value,
-            };
-            if (!record.cliente_id || !record.numero) return showNotif('danger', 'Cliente e Nº do Processo são obrigatórios.');
-
-            const { error } = id
-                ? await sb.from('casos').update(record).eq('id', id)
-                : await sb.from('casos').insert(record);
-
-            if (error) showNotif('danger', 'Erro: ' + error.message);
-            else {
-                showNotif('success', 'Caso salvo!');
-                fecharModal('modal-caso');
-                renderCasos();
-                loadDashboard();
-            }
+            showNotif('info', 'Funcionalidade de casos não implementada nesta versão.');
         }
 
         async function abrirModalDocumento() {
-            $('#modal-documento form').reset();
-            await populateSelect('doc-cliente', 'clientes', 'id', 'nome', '', 'Selecione um cliente');
-            await populateSelect('doc-caso', 'casos', 'id', 'numero', '', 'Nenhum');
-            $('#modal-documento').classList.add('active');
+            showNotif('info', 'Funcionalidade de documentos não implementada nesta versão.');
         }
 
         async function salvarDocumento(event) {
             event.preventDefault();
-            const file = $('#doc-file').files[0];
-            const titulo = $('#doc-titulo').value;
-            const clienteId = $('#doc-cliente').value;
-            if (!file || !titulo || !clienteId) return showNotif('danger', 'Cliente, título e arquivo são obrigatórios.');
-
-            const { data: { user } } = await sb.auth.getUser();
-            if (!user) return showNotif('danger', 'Usuário não autenticado.');
-
-            const sanitizedFileName = file.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_').replace(/__+/g, '_');
-            const filePath = `${user.id}/${Date.now()}-${sanitizedFileName}`;
-
-            const { error: uploadError } = await sb.storage.from('documentos').upload(filePath, file);
-            if (uploadError) {
-                console.error("Erro no Upload:", uploadError);
-                return showNotif('danger', 'Erro no upload: ' + uploadError.message);
-            }
-
-            const record = {
-                cliente_id: clienteId,
-                caso_id: $('#doc-caso').value || null,
-                titulo: titulo,
-                nome_arquivo: file.name,
-                path_arquivo: filePath,
-                tipo_arquivo: file.type,
-            };
-            const { error: dbError } = await sb.from('docs').insert(record);
-            if (dbError) {
-                await sb.storage.from('documentos').remove([filePath]);
-                showNotif('danger', 'Erro ao salvar no banco: ' + dbError.message);
-            } else {
-                showNotif('success', 'Documento salvo!');
-                fecharModal('modal-documento');
-                renderDocumentos();
-            }
+            showNotif('info', 'Funcionalidade de documentos não implementada nesta versão.');
         }
 
         async function downloadDoc(id) {
-            const { data: doc, error: findError } = await sb.from('docs').select('path_arquivo, nome_arquivo').eq('id', id).single();
-            if (findError || !doc) return showNotif('danger', 'Arquivo não encontrado.');
-
-            const { data, error: downloadError } = await sb.storage.from('documentos').download(doc.path_arquivo);
-            if (downloadError) return showNotif('danger', 'Erro no download: ' + downloadError.message);
-
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(data);
-            link.download = doc.nome_arquivo;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
+            showNotif('info', 'Funcionalidade de documentos não implementada nesta versão.');
         }
 
         async function abrirModalEvento(id = null) {
-            if (!id) {
-                $('#modal-evento form').reset();
-                $('#evento-id').value = '';
-                $('#evento-modal-titulo').innerText = 'Novo Evento / Prazo';
-            }
-            await populateSelect('evento-cliente', 'clientes', 'id', 'nome', '', 'Nenhum');
-            $('#evento-caso').innerHTML = '<option value="">Nenhum</option>';
-            if (id) {
-                const { data: r } = await sb.from('agenda').select('*').eq('id', id).single();
-                if (!r) return showNotif('danger', 'Evento não encontrado.');
-                $('#evento-modal-titulo').innerText = 'Editar Evento';
-                $('#evento-id').value = r.id;
-                $('#evento-titulo').value = r.titulo;
-                $('#evento-datahora').value = r.datahora ? r.datahora.slice(0, 16) : '';
-                $('#evento-status').value = r.status;
-                $('#evento-descricao').value = r.descricao;
-                $('#evento-tipo').value = r.tipo_evento;
-                $('#evento-local').value = r.local;
-                if (r.cliente_id) {
-                    await populateSelect('evento-cliente', 'clientes', 'id', 'nome', '', 'Nenhum', r.cliente_id);
-                    await populateSelect('evento-caso', 'casos', 'id', 'numero', `cliente_id.eq.${r.cliente_id}`, 'Nenhum', r.caso_id);
-                }
-            }
-            $('#modal-evento').classList.add('active');
+            showNotif('info', 'Funcionalidade de agenda não implementada nesta versão.');
         }
 
         async function salvarEvento(event) {
             event.preventDefault();
-            const id = $('#evento-id').value;
-            const record = {
-                cliente_id: $('#evento-cliente').value || null,
-                caso_id: $('#evento-caso').value || null,
-                titulo: $('#evento-titulo').value,
-                datahora: $('#evento-datahora').value,
-                status: $('#evento-status').value,
-                descricao: $('#evento-descricao').value,
-                tipo_evento: $('#evento-tipo').value,
-                local: $('#evento-local').value
-            };
-            if (!record.titulo || !record.datahora || !record.tipo_evento) return showNotif('danger', 'Título, Data/Hora e Tipo são obrigatórios.');
-
-            const { error } = id
-                ? await sb.from('agenda').update(record).eq('id', id)
-                : await sb.from('agenda').insert(record);
-
-            if (error) showNotif('danger', 'Erro: ' + error.message);
-            else {
-                showNotif('success', 'Evento salvo!');
-                fecharModal('modal-evento');
-                renderAgenda();
-                loadDashboard();
-            }
+            showNotif('info', 'Funcionalidade de agenda não implementada nesta versão.');
         }
 
         async function abrirModalTarefa(id = null) {
-            if (!id) {
-                $('#modal-tarefa form').reset();
-                $('#tarefa-id').value = '';
-                $('#tarefa-modal-titulo').innerText = 'Nova Tarefa';
-            }
-            await populateSelect('tarefa-cliente', 'clientes', 'id', 'nome', '', 'Nenhum');
-            $('#tarefa-caso').innerHTML = '<option value="">Nenhum</option>';
-            if (id) {
-                const { data: r } = await sb.from('tarefas').select('*').eq('id', id).single();
-                if (!r) return showNotif('danger', 'Tarefa não encontrada.');
-                $('#tarefa-modal-titulo').innerText = 'Editar Tarefa';
-                $('#tarefa-id').value = r.id;
-                $('#tarefa-descricao').value = r.descricao;
-                $('#tarefa-prioridade').value = r.prioridade;
-                $('#tarefa-prazo').value = r.prazo_data;
-                if (r.cliente_id) {
-                    await populateSelect('tarefa-cliente', 'clientes', 'id', 'nome', '', 'Nenhum', r.cliente_id);
-                    await populateSelect('tarefa-caso', 'casos', 'id', 'numero', `cliente_id.eq.${r.cliente_id}`, 'Nenhum', r.caso_id);
-                }
-            }
-            $('#modal-tarefa').classList.add('active');
+            showNotif('info', 'Funcionalidade de tarefas não implementada nesta versão.');
         }
 
         async function salvarTarefa(event) {
             event.preventDefault();
-            const id = $('#tarefa-id').value;
-            const record = {
-                descricao: $('#tarefa-descricao').value,
-                prioridade: $('#tarefa-prioridade').value,
-                prazo_data: $('#tarefa-prazo').value || null,
-                cliente_id: $('#tarefa-cliente').value || null,
-                caso_id: $('#tarefa-caso').value || null,
-                status: 'Pendente'
-            };
-            if (!record.descricao) return showNotif('danger', 'A descrição da tarefa é obrigatória.');
-
-            const query = id
-                ? sb.from('tarefas').update({ descricao: record.descricao, prioridade: record.prioridade, prazo_data: record.prazo_data, cliente_id: record.cliente_id, caso_id: record.caso_id }).eq('id', id)
-                : sb.from('tarefas').insert(record);
-
-            const { error } = await query;
-
-            if (error) {
-                console.error("Erro ao salvar tarefa:", error);
-                showNotif('danger', 'Erro: ' + error.message);
-            } else {
-                showNotif('success', 'Tarefa salva!');
-                fecharModal('modal-tarefa');
-                renderTarefas();
-                loadDashboard();
-            }
+            showNotif('info', 'Funcionalidade de tarefas não implementada nesta versão.');
         }
 
         async function concluirTarefa(id, isChecked) {
-            const newStatus = isChecked ? 'Concluída' : 'Pendente';
-            const { error } = await sb.from('tarefas').update({ status: newStatus }).eq('id', id);
-            if (error) showNotif('danger', `Erro ao atualizar tarefa: ${error.message}`);
-            else {
-                showNotif('success', `Tarefa marcada como ${newStatus.toLowerCase()}.`);
-                renderTarefas();
-                loadDashboard();
-            }
+            showNotif('info', 'Funcionalidade de tarefas não implementada nesta versão.');
         }
 
         async function abrirModalFin(tipo, id = null) {
-            $('#modal-fin form').reset();
-            $('#fin-id').value = '';
-            $('#fin-tipo').value = tipo;
-            $('#fin-titulo').innerText = tipo === 'Receber' ? 'Registrar Receita' : 'Registrar Despesa';
-            await populateSelect('fin-cliente', 'clientes', 'id', 'nome', '', 'Nenhum');
-            $('#fin-caso').innerHTML = '<option value="">Nenhum</option>';
-            if (id) {
-                const { data: r } = await sb.from('fin').select('*').eq('id', id).single();
-                if (!r) return showNotif('danger', 'Lançamento não encontrado.');
-                $('#fin-id').value = r.id;
-                $('#fin-descricao').value = r.descricao;
-                $('#fin-categoria').value = r.categoria;
-                $('#fin-valor').value = r.valor;
-                $('#fin-data').value = r.data;
-                $('#fin-status').value = r.status_pg;
-                if (r.cliente_id) {
-                    await populateSelect('fin-cliente', 'clientes', 'id', 'nome', '', 'Nenhum', r.cliente_id);
-                    await populateSelect('fin-caso', 'casos', 'id', 'numero', `cliente_id.eq.${r.cliente_id}`, 'Nenhum', r.caso_id);
-                }
-            } else {
-                $('#fin-data').valueAsDate = new Date();
-            }
-            $('#modal-fin').classList.add('active');
+            showNotif('info', 'Funcionalidade financeira não implementada nesta versão.');
         }
 
         async function salvarFin(event) {
             event.preventDefault();
-            const id = $('#fin-id').value;
-            const record = {
-                tipo: $('#fin-tipo').value,
-                valor: $('#fin-valor').value,
-                data: $('#fin-data').value,
-                descricao: $('#fin-descricao').value,
-                categoria: $('#fin-categoria').value,
-                status_pg: $('#fin-status').value,
-                cliente_id: $('#fin-cliente').value || null,
-                caso_id: $('#fin-caso').value || null
-            };
-            if (!record.valor || !record.data || !record.descricao) return showNotif('danger', 'Descrição, Valor e Data são obrigatórios.');
-
-            const { error } = id
-                ? await sb.from('fin').update(record).eq('id', id)
-                : await sb.from('fin').insert(record);
-
-            if (error) showNotif('danger', 'Erro: ' + error.message);
-            else {
-                showNotif('success', 'Lançamento salvo!');
-                fecharModal('modal-fin');
-                loadFinanceiro();
-                loadDashboard();
-            }
+            showNotif('info', 'Funcionalidade financeira não implementada nesta versão.');
         }
 
         async function exportarDados(tableName) {
-            const { data, error } = await sb.from(tableName).select('*');
-            if (error || !data || !data.length) {
-                showNotif('info', 'Não há dados para exportar.');
-                return;
-            }
-            const columns = Object.keys(data[0]);
-            let csvContent = "data:text/csv;charset=utf-8," + columns.join(";") + "\n";
-            csvContent += data.map(row => columns.map(col => `"${row[col]}"`).join(";")).join("\n");
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `${tableName}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            showNotif('info', 'Funcionalidade não implementada nesta versão.');
         }
 
         /* ------------- CONTROLE DO SIDEBAR ------------- */
