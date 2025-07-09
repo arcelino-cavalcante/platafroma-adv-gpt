@@ -20,10 +20,10 @@
             --main: var(--cor-vinho);
             --accent: var(--cor-dourado);
             --accent-light: var(--cor-bege-claro);
-            --danger: #ef4444;
-            --success: #10b981;
-            --info: #0ea5e9;
-            --warning: #f59e0b;
+            --danger: #ff6b6b;
+            --success: #4caf50;
+            --info: #42a5f5;
+            --warning: #ffb74d;
             --bg: var(--cor-bege-fundo);
             --white: #ffffff;
             --border: #ddd3bb;
@@ -400,9 +400,9 @@
 
         .badge {
             display: inline-block;
-            padding: .3rem .8rem;
+            padding: .2rem .6rem;
             border-radius: 99px;
-            font-size: .8rem;
+            font-size: .75rem;
             font-weight: 600;
             color: var(--cor-texto-escuro);
             text-align: center;
@@ -707,19 +707,33 @@
             font-size: .85rem;
             color: var(--white);
             cursor: pointer;
+            overflow: visible;
+            white-space: normal;
+            line-height: 1.2;
         }
 
         .fc .fc-event-title {
             color: var(--white);
             font-size: .85rem;
+            white-space: normal;
+            overflow-wrap: anywhere;
         }
 
         .fc-event-time {
             font-weight: 600;
+            white-space: normal;
         }
 
         .fc-daygrid-event-dot {
             border-color: var(--white);
+        }
+
+        .fc-event-details {
+            margin-top: .2rem;
+            font-size: .7rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: .2rem;
         }
 
         .fc .fc-event.status-agendado {
