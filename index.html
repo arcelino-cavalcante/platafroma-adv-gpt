@@ -318,12 +318,25 @@
             font-weight: 500;
         }
 
-        .chart-container {
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-box {
             background: var(--cor-bege-claro);
             border-radius: var(--radius);
-            padding: 2rem;
+            padding: 1.5rem;
             box-shadow: var(--shadow);
-            margin-bottom: 2.5rem;
+        }
+
+        .chart-box h3 {
+            margin: 0 0 1rem 0;
+            text-align: center;
+            font-size: 1.1rem;
         }
 
         #painel-prazos ul {
@@ -1854,9 +1867,11 @@
                 ]);
 
                 container.innerHTML = `
-                    <div class="chart-container"><canvas id="casos-status-chart"></canvas></div>
-                    <div class="chart-container"><canvas id="tarefas-prioridade-chart"></canvas></div>
-                    <div class="chart-container"><canvas id="fin-evolucao-chart"></canvas></div>
+                    <div class="charts-grid">
+                        <div class="chart-box"><h3>Status dos Casos</h3><canvas id="casos-status-chart"></canvas></div>
+                        <div class="chart-box"><h3>Prioridade das Tarefas</h3><canvas id="tarefas-prioridade-chart"></canvas></div>
+                        <div class="chart-box"><h3>Evolução Financeira</h3><canvas id="fin-evolucao-chart"></canvas></div>
+                    </div>
                 `;
 
                 const statusCounts = {};
@@ -1873,7 +1888,12 @@
                             backgroundColor: ['#42a5f5', '#66bb6a', '#ffb74d', '#ab47bc']
                         }]
                     },
-                    options: { plugins: { legend: { position: 'bottom' } } }
+                    options: {
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            title: { display: true, text: 'Status dos Casos' }
+                        }
+                    }
                 });
 
                 const prioridadeCounts = { Alta: 0, Média: 0, Baixa: 0 };
@@ -1892,7 +1912,10 @@
                         }]
                     },
                     options: {
-                        plugins: { legend: { display: false } },
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: 'Prioridade das Tarefas' }
+                        },
                         scales: { y: { beginAtZero: true } }
                     }
                 });
@@ -1929,7 +1952,12 @@
                             }
                         ]
                     },
-                    options: { plugins: { legend: { position: 'bottom' } } }
+                    options: {
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            title: { display: true, text: 'Evolução Financeira Mensal' }
+                        }
+                    }
                 });
             } catch (e) {
                 console.error('Erro ao carregar relatórios:', e);
