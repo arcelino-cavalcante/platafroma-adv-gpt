@@ -32,6 +32,14 @@
             --radius: 1rem;
             --shadow: 0 4px 18px rgba(0, 0, 0, .08);
             --transition: .2s ease-in-out;
+
+            /* Fluid type scale */
+            --fs-base: clamp(0.9rem, 0.25vw + 0.9rem, 1rem);
+            --fs-h1: clamp(1.4rem, 1.5vw + 1rem, 2.2rem);
+            --fs-h2: clamp(1.25rem, 1.2vw + 0.8rem, 1.8rem);
+            --fs-h3: clamp(1.1rem, 1vw + 0.6rem, 1.5rem);
+            --fs-value: clamp(1.8rem, 2vw + 1rem, 2.2rem);
+
             font-family: 'Inter', system-ui, sans-serif;
         }
 
@@ -44,8 +52,13 @@
         body {
             background: var(--bg);
             color: var(--dark-text);
+            font-size: var(--fs-base);
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
+        }
+
+        p {
+            font-size: var(--fs-base);
         }
 
         header {
@@ -60,7 +73,7 @@
         }
 
         header h1 {
-            font-size: 1.6rem;
+            font-size: var(--fs-h1);
             font-weight: 700;
             color: var(--cor-bege-claro);
             flex-shrink: 0;
@@ -192,7 +205,7 @@
         }
 
         .section-header h2 {
-            font-size: 1.8rem;
+            font-size: var(--fs-h2);
         }
 
         .filter-bar {
@@ -253,7 +266,7 @@
         }
 
         #login-panel h2 {
-            font-size: 1.8rem;
+            font-size: var(--fs-h2);
             font-weight: 700;
             margin-bottom: 2rem;
             color: var(--main);
@@ -318,7 +331,7 @@
         }
 
         .card .value {
-            font-size: 2.2rem;
+            font-size: var(--fs-value);
             font-weight: 800;
         }
 
@@ -361,7 +374,7 @@
         .chart-box h3 {
             margin: 0 0 1rem 0;
             text-align: center;
-            font-size: 1.1rem;
+            font-size: var(--fs-h3);
         }
 
         #painel-prazos ul {
@@ -531,7 +544,7 @@
         }
 
         .modal-header h3 {
-            font-size: 1.5rem;
+            font-size: var(--fs-h3);
         }
 
         .close-modal {
@@ -622,7 +635,7 @@
         }
 
         .cliente-card h3 {
-            font-size: 1.4rem;
+            font-size: var(--fs-h3);
             color: var(--main);
             margin-bottom: 1rem;
             border-bottom: 2px solid var(--cor-dourado);
@@ -712,7 +725,7 @@
 
         .fc .fc-toolbar-title {
             color: var(--dark-text);
-            font-size: 1.5rem;
+            font-size: var(--fs-h2);
             font-weight: 700;
         }
 
@@ -820,7 +833,6 @@
             }
 
             .fc .fc-toolbar-title {
-                font-size: 1.2rem;
                 margin-bottom: 0.5rem;
             }
 
@@ -835,12 +847,7 @@
                 padding: .4rem .8rem;
             }
 
-            .fc-daygrid-day-number {
-                font-size: .8rem;
-            }
-
             .fc .fc-event {
-                font-size: .75rem;
                 padding: .1rem .3rem;
             }
 
@@ -1069,7 +1076,7 @@
         </div>
         <button id="btnLogin" class="btn" style="width: 100%;">Entrar</button>
         <div id="login-erro"></div>
-        <p style="text-align:center; margin-top:1.8rem; font-size:.9rem; color:#666;">
+        <p style="text-align:center; margin-top:1.8rem; font-size: var(--fs-base); color:#666;">
             Primeiro acesso? <a href="#" id="btnCriarConta" style="color:var(--accent); font-weight:600;">Criar
                 conta</a>
         </p>
@@ -1250,7 +1257,7 @@
                 </div>
                 <div id="resumo-financeiro" class="painel-cards"></div>
                 <div class="section-header" style="margin-top: 2.5rem; margin-bottom: 1rem;">
-                    <h3 style="font-size: 1.5rem;">Histórico de Lançamentos</h3>
+                    <h3 style="font-size: var(--fs-h3);">Histórico de Lançamentos</h3>
                     <div class="filter-bar" style="margin-bottom: 0;">
                         <button class="btn btn-success" onclick="abrirModalFin('Receber')"><i class="fa fa-plus"></i>
                             Nova Receita</button>
