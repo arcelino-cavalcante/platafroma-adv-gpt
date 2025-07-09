@@ -601,30 +601,25 @@
             list-style: none;
             padding: 0;
             margin: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: .5rem;
         }
 
         .cliente-card li {
-            background: var(--accent-light);
-            padding: .5rem .8rem;
-            border-radius: .5rem;
+            padding: .5rem 0;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex: 1 1 100%;
+        }
+
+        .cliente-card li:last-child {
+            border-bottom: none;
         }
 
         .cliente-card li .badge {
             margin-left: .5rem;
         }
 
-        @media (min-width: 600px) {
-            .cliente-card li {
-                flex: 1 1 calc(50% - .5rem);
-            }
-        }
+
 
         .spinner {
             width: 50px;
