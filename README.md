@@ -34,3 +34,5 @@ letras minúsculas):
 - **agenda**: `id`, `titulo`, `tipo_evento`, `datahora`, `local`, `cliente_id`, `caso_id`, `status`, `descricao`
 - **tarefas**: `id`, `descricao`, `prioridade`, `prazo`, `cliente_id`, `caso_id`, `status`
 - **fin**: `id`, `descricao`, `categoria`, `valor`, `data`, `status_pg`, `cliente_id`, `caso_id`, `tipo`
+
+Para datas e prazos, o script converte automaticamente valores do tipo Date em um formato ISO (yyyy-MM-dd'T'HH:mm:ss'Z'). Isso garante que o painel consiga interpretar corretamente as datas retornadas pela planilha.
