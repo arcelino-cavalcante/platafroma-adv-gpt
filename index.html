@@ -1828,9 +1828,99 @@
         }
 
         async function loadRelatorios() {
-            const chartContainer = $('#chart-relatorio').parentElement;
-            chartContainer.innerHTML = '<p style="text-align:center; padding: 2rem;">Funcionalidade não implementada.</p>';
-            showNotif('info', 'Funcionalidade não implementada nesta versão.');
+            const container = $('#chart-relatorio');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center; padding: 2rem;">Carregando...</p>';
+
+            try {
+                const [casos, tarefas, fin] = await Promise.all([
+                    gsGetRows('casos'),
+                    gsGetRows('tarefas'),
+                    gsGetRows('fin')
+                ]);
+
+                container.innerHTML = `
+                    <div class="chart-container"><canvas id="casos-status-chart"></canvas></div>
+                    <div class="chart-container"><canvas id="tarefas-prioridade-chart"></canvas></div>
+                    <div class="chart-container"><canvas id="fin-evolucao-chart"></canvas></div>
+                `;
+
+                const statusCounts = {};
+                (casos || []).forEach(c => {
+                    const s = c.status || 'Outro';
+                    statusCounts[s] = (statusCounts[s] || 0) + 1;
+                });
+                new Chart($('#casos-status-chart'), {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(statusCounts),
+                        datasets: [{
+                            data: Object.values(statusCounts),
+                            backgroundColor: ['#42a5f5', '#66bb6a', '#ffb74d', '#ab47bc']
+                        }]
+                    },
+                    options: { plugins: { legend: { position: 'bottom' } } }
+                });
+
+                const prioridadeCounts = { Alta: 0, Média: 0, Baixa: 0 };
+                (tarefas || []).forEach(t => {
+                    const p = t.prioridade || 'Baixa';
+                    prioridadeCounts[p] = (prioridadeCounts[p] || 0) + 1;
+                });
+                new Chart($('#tarefas-prioridade-chart'), {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(prioridadeCounts),
+                        datasets: [{
+                            label: 'Tarefas',
+                            data: Object.values(prioridadeCounts),
+                            backgroundColor: '#5D1A2A'
+                        }]
+                    },
+                    options: {
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+
+                const receitasPorMes = {}, despesasPorMes = {};
+                (fin || []).forEach(f => {
+                    if (!f.data) return;
+                    const mes = new Date(f.data).toISOString().slice(0, 7);
+                    if (f.tipo === 'Receber') {
+                        receitasPorMes[mes] = (receitasPorMes[mes] || 0) + Number(f.valor || 0);
+                    } else if (f.tipo === 'Pagar') {
+                        despesasPorMes[mes] = (despesasPorMes[mes] || 0) + Number(f.valor || 0);
+                    }
+                });
+                const meses = Array.from(new Set([...Object.keys(receitasPorMes), ...Object.keys(despesasPorMes)])).sort();
+                new Chart($('#fin-evolucao-chart'), {
+                    type: 'line',
+                    data: {
+                        labels: meses,
+                        datasets: [
+                            {
+                                label: 'Receitas',
+                                data: meses.map(m => receitasPorMes[m] || 0),
+                                borderColor: '#4caf50',
+                                backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Despesas',
+                                data: meses.map(m => despesasPorMes[m] || 0),
+                                borderColor: '#ef5350',
+                                backgroundColor: 'rgba(239, 83, 80, 0.2)',
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: { plugins: { legend: { position: 'bottom' } } }
+                });
+            } catch (e) {
+                console.error('Erro ao carregar relatórios:', e);
+                container.innerHTML = '<p style="text-align:center; padding: 2rem;">Erro ao carregar dados.</p>';
+            }
         }
 
         async function renderCasosPorCliente() {
