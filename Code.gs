@@ -18,7 +18,17 @@ function getRows(sheetName) {
   const rawHeaders = data.shift();
   // Normaliza cabeçalhos para letras minúsculas
   const headers = rawHeaders.map(h => String(h).toLowerCase());
-  const rows = data.map(row => headers.reduce((o, h, i) => (o[h] = row[i], o), {}));
+  const rows = data.map(r => {
+    const obj = {};
+    headers.forEach((h, i) => {
+      let v = r[i];
+      if (v instanceof Date) {
+        v = Utilities.formatDate(v, 'UTC', "yyyy-MM-dd'T'HH:mm:ss'Z'");
+      }
+      obj[h] = v;
+    });
+    return obj;
+  });
 
   // Sincroniza a aba de documentos com a pasta no Drive
   if (sheetName === 'docs') {
