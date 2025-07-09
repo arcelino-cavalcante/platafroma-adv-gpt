@@ -1005,6 +1005,54 @@
                 display: block;
             }
         }
+
+        /* Ajustes extras para telas muito pequenas */
+        @media (max-width: 480px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.4rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .filter-bar,
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+
+            #login-panel {
+                max-width: 100%;
+                margin: 5vh 1rem;
+                padding: 2rem 1rem;
+            }
+
+            .container {
+                padding: 1rem 0.5rem;
+            }
+
+            .modal {
+                width: 95%;
+                padding: 1rem;
+            }
+
+            #painel-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                width: 200px;
+            }
+        }
     </style>
 </head>
 
