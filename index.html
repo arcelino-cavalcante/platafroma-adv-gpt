@@ -326,6 +326,12 @@
             margin-bottom: 2rem;
         }
 
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .chart-box {
             background: var(--cor-bege-claro);
             border-radius: var(--radius);
@@ -830,7 +836,8 @@
             }
 
             .calendar-container {
-                display: none;
+                display: block;
+                margin-top: 1rem;
             }
 
             .card .value {
