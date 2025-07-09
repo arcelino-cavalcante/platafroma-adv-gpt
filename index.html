@@ -338,6 +338,16 @@
             }
         }
 
+        @media (max-width: 480px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .chart-box canvas {
+                width: 100% !important;
+                height: auto !important;
+            }
+        }
+
         .chart-box {
             background: var(--cor-bege-claro);
             border-radius: var(--radius);
