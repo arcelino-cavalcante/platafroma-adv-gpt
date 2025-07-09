@@ -2,7 +2,14 @@ const SPREADSHEET_ID = '1qYVdV65Uun2YhsJKU7Cy79lKcUYD3I_oAGd7G5tQs6A';
 const DOCS_FOLDER_ID = '1JnSYQu0o1NvEerJyWPS1pdm7aWgGSx_C';
 
 function getSheet_(name) {
-  return SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(name);
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    const lowerName = name.toLowerCase();
+    sheet = ss.getSheets().find(s => s.getName().toLowerCase().trim() === lowerName);
+  }
+  if (!sheet) throw new Error('Sheet not found: ' + name);
+  return sheet;
 }
 
 function getRows(sheetName) {
