@@ -18,6 +18,11 @@ e os documentos ficam em uma pasta no Google Drive.
 4. Publique o projeto como aplicativo da Web ou use a extensão do Apps Script
    para serviço de backend.
 
+Ao carregar os dados dos documentos, o script verifica a pasta indicada em
+`DOCS_FOLDER_ID` e adiciona automaticamente à aba `docs` qualquer arquivo que
+ainda não esteja registrado. Isso garante que todos os documentos salvos na
+pasta apareçam no painel.
+
 ## Estrutura das abas
 O sistema espera que cada aba da planilha possua as seguintes colunas (todas em
 letras minúsculas):

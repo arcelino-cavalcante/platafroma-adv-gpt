@@ -11,7 +11,35 @@ function getRows(sheetName) {
   const rawHeaders = data.shift();
   // Normaliza cabeçalhos para letras minúsculas
   const headers = rawHeaders.map(h => String(h).toLowerCase());
-  return data.map(row => headers.reduce((o, h, i) => (o[h] = row[i], o), {}));
+  const rows = data.map(row => headers.reduce((o, h, i) => (o[h] = row[i], o), {}));
+
+  // Sincroniza a aba de documentos com a pasta no Drive
+  if (sheetName === 'docs') {
+    const existingIds = rows.map(r => String(r.file_id));
+    const folder = DriveApp.getFolderById(DOCS_FOLDER_ID);
+    const files = folder.getFiles();
+    while (files.hasNext()) {
+      const f = files.next();
+      const id = f.getId();
+      if (existingIds.indexOf(id) === -1) {
+        const newRow = {
+          id: sheet.getLastRow(),
+          cliente_id: '',
+          caso_id: '',
+          titulo: f.getName(),
+          file_id: id,
+          file_nome: f.getName(),
+          file_url: f.getUrl(),
+        };
+        const values = headers.map(h => newRow[h] || '');
+        sheet.appendRow(values);
+        rows.push(newRow);
+      }
+    }
+    SpreadsheetApp.flush();
+  }
+
+  return rows;
 }
 
 function deleteRow(sheetName, id) {
@@ -24,6 +52,7 @@ function deleteRow(sheetName, id) {
   for (let i = 0; i < data.length; i++) {
     if (String(data[i][idIdx]) == String(id)) {
       sheet.deleteRow(i + 2); // +2 porque cabeçalho ocupa a primeira linha
+      SpreadsheetApp.flush();
       return { success: true };
     }
   }
@@ -45,6 +74,7 @@ function updateRow(sheetName, id, row) {
         if (h in row) existing[j] = row[h];
       });
       sheet.getRange(rowNum, 1, 1, headers.length).setValues([existing]);
+      SpreadsheetApp.flush();
       return { success: true };
     }
   }
@@ -73,6 +103,7 @@ function addRow(sheetName, row) {
 
   const values = headers.map(h => lowerRow[h] || '');
   sheet.appendRow(values);
+  SpreadsheetApp.flush();
   return { success: true };
 }
 
@@ -80,6 +111,7 @@ function uploadDocument(name, base64) {
   const folder = DriveApp.getFolderById(DOCS_FOLDER_ID);
   const blob = Utilities.newBlob(Utilities.base64Decode(base64), undefined, name);
   const file = folder.createFile(blob);
+  SpreadsheetApp.flush();
   return { id: file.getId(), name: file.getName(), url: file.getUrl() };
 }
 
