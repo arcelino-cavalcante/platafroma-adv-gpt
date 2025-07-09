@@ -1074,6 +1074,7 @@
                     </select>
                     <button class="btn btn-success" onclick="abrirModalCaso()"><i class="fa fa-plus"></i> Novo
                         Caso</button>
+                    <button class="btn btn-info" onclick="exportarDados('casos')"><i class="fa fa-download"></i> Exportar CSV</button>
                 </div>
                 <div class="table-wrapper" id="tabela-casos"></div>
             </div>
@@ -1088,6 +1089,7 @@
                         onkeyup="renderClientes()">
                     <button class="btn btn-success" onclick="abrirModalCliente()"><i class="fa fa-plus"></i> Novo
                         Cliente</button>
+                    <button class="btn btn-info" onclick="exportarDados('clientes')"><i class="fa fa-download"></i> Exportar CSV</button>
                 </div>
                 <div class="table-wrapper" id="tabela-clientes"></div>
             </div>
@@ -1106,6 +1108,7 @@
                     </select>
                     <button class="btn btn-success" onclick="abrirModalDocumento()"><i class="fa fa-upload"></i> Anexar
                         Documento</button>
+                    <button class="btn btn-info" onclick="exportarDados('docs')"><i class="fa fa-download"></i> Exportar CSV</button>
                 </div>
                 <div class="table-wrapper" id="tabela-documentos"></div>
             </div>
@@ -1126,6 +1129,7 @@
                         <option>Prazo Processual</option>
                         <option>Outro</option>
                     </select>
+                    <button class="btn btn-info" onclick="exportarDados('agenda')"><i class="fa fa-download"></i> Exportar CSV</button>
                 </div>
                 <div class="table-wrapper" id="tabela-agenda"></div>
             </div>
@@ -1149,6 +1153,7 @@
                         <option>Média</option>
                         <option>Baixa</option>
                     </select>
+                    <button class="btn btn-info" onclick="exportarDados('tarefas')"><i class="fa fa-download"></i> Exportar CSV</button>
                 </div>
                 <div class="table-wrapper" id="tabela-tarefas"></div>
             </div>
@@ -1166,6 +1171,7 @@
                             Nova Receita</button>
                         <button class="btn btn-danger" onclick="abrirModalFin('Pagar')"><i class="fa fa-minus"></i> Nova
                             Despesa</button>
+                        <button class="btn btn-info" onclick="exportarDados('fin')"><i class="fa fa-download"></i> Exportar CSV</button>
                     </div>
                 </div>
                 <div class="table-wrapper" id="tabela-financeiro"></div>
@@ -2283,8 +2289,25 @@
             }
         }
 
-        async function exportarDados(tableName) {
-            showNotif('info', 'Funcionalidade não implementada nesta versão.');
+        function exportarDados(tableName) {
+            showNotif('info', 'Gerando CSV, aguarde...');
+            google.script.run.withSuccessHandler(res => {
+                if (res && res.url) {
+                    const a = document.createElement('a');
+                    a.href = res.url;
+                    a.download = `${tableName}.csv`;
+                    a.target = '_blank';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    showNotif('success', 'Arquivo pronto para download.');
+                } else {
+                    showNotif('danger', 'Falha ao gerar arquivo.');
+                }
+            }).withFailureHandler(e => {
+                showNotif('danger', 'Erro: ' + e.message);
+                console.error(e);
+            }).exportSheetCsv(tableName);
         }
 
         /* ------------- CONTROLE DO SIDEBAR ------------- */
