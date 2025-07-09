@@ -1431,6 +1431,13 @@
             });
         }
 
+        function gsSendNotification(email, assunto, mensagem) {
+            return new Promise((res, rej) => {
+                google.script.run.withSuccessHandler(res).withFailureHandler(rej)
+                    .sendNotification(email, assunto, mensagem);
+            });
+        }
+
         async function getRowById(table, id) {
             const rows = await gsGetRows(table);
             return rows.find(r => String(r.id) === String(id));
@@ -2167,6 +2174,26 @@
                     await gsAddRow('agenda', record);
                     showNotif('success', 'Evento salvo!');
                 }
+
+                const recipients = [];
+                if (record.cliente_id) {
+                    const cli = await getRowById('clientes', record.cliente_id);
+                    if (cli && cli.email && (!cli.notificar || String(cli.notificar).toLowerCase() !== 'nao')) {
+                        recipients.push(cli.email);
+                    }
+                }
+                if (record.caso_id) {
+                    const caso = await getRowById('casos', record.caso_id);
+                    if (caso && caso.responsavel && caso.responsavel.includes('@')) {
+                        recipients.push(caso.responsavel);
+                    }
+                }
+                if (recipients.length) {
+                    const assunto = `${id ? 'Atualização' : 'Novo'} evento: ${record.titulo}`;
+                    const mensagem = `Título: ${record.titulo}\nData/Hora: ${fmtDateTime(record.datahora)}\nStatus: ${record.status}`;
+                    await gsSendNotification(recipients.join(','), assunto, mensagem);
+                }
+
                 fecharModal('modal-evento');
                 renderAgenda();
                 loadDashboard();
@@ -2220,6 +2247,26 @@
                     await gsAddRow('tarefas', record);
                     showNotif('success', 'Tarefa salva!');
                 }
+
+                const recipients = [];
+                if (record.cliente_id) {
+                    const cli = await getRowById('clientes', record.cliente_id);
+                    if (cli && cli.email && (!cli.notificar || String(cli.notificar).toLowerCase() !== 'nao')) {
+                        recipients.push(cli.email);
+                    }
+                }
+                if (record.caso_id) {
+                    const caso = await getRowById('casos', record.caso_id);
+                    if (caso && caso.responsavel && caso.responsavel.includes('@')) {
+                        recipients.push(caso.responsavel);
+                    }
+                }
+                if (recipients.length) {
+                    const assunto = `${id ? 'Atualização' : 'Nova'} tarefa`;
+                    const mensagem = `Descrição: ${record.descricao}\nPrazo: ${record.prazo || 'Sem prazo'}\nStatus: ${record.status}`;
+                    await gsSendNotification(recipients.join(','), assunto, mensagem);
+                }
+
                 fecharModal('modal-tarefa');
                 renderTarefas();
                 loadDashboard();

@@ -163,3 +163,16 @@ function exportSheetCsv(sheetName) {
   SpreadsheetApp.flush();
   return { url: file.getUrl(), name: file.getName(), id: file.getId() };
 }
+
+function sendNotification(email, assunto, mensagem) {
+  if (!email) {
+    return { success: false, message: 'Email ausente' };
+  }
+  try {
+    if (Array.isArray(email)) email = email.join(',');
+    MailApp.sendEmail(email, assunto || '', mensagem || '');
+    return { success: true };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}
