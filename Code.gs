@@ -1,5 +1,7 @@
-const SPREADSHEET_ID = '1qYVdV65Uun2YhsJKU7Cy79lKcUYD3I_oAGd7G5tQs6A';
-const DOCS_FOLDER_ID = '1JnSYQu0o1NvEerJyWPS1pdm7aWgGSx_C';
+const SPREADSHEET_ID = PropertiesService.getScriptProperties()
+  .getProperty('SPREADSHEET_ID');
+const DOCS_FOLDER_ID = PropertiesService.getScriptProperties()
+  .getProperty('DOCS_FOLDER_ID');
 
 function getSheet_(name) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);

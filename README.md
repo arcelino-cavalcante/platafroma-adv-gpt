@@ -13,8 +13,9 @@ e os documentos ficam em uma pasta no Google Drive.
      `notas` exatamente nesses nomes (em letras minúsculas). O script considera
      os cabeçalhos em minúsculas para salvar e ler os dados.
 2. Crie uma pasta no Google Drive para os arquivos enviados.
-3. Edite `Code.gs` e preencha as constantes `SPREADSHEET_ID` e
-   `DOCS_FOLDER_ID` com os IDs correspondentes.
+3. No editor do Apps Script, abra **Arquivo > Propriedades do projeto** e, na
+   aba **Propriedades do Script**, adicione `SPREADSHEET_ID` e
+   `DOCS_FOLDER_ID` com os respectivos IDs.
 4. Publique o projeto como aplicativo da Web ou use a extensão do Apps Script
    para serviço de backend.
 
