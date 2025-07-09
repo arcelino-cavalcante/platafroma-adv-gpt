@@ -145,3 +145,19 @@ function login(email, senha) {
   const ok = data.some(row => row[emailIdx] == email && row[senhaIdx] == senha);
   return { success: ok };
 }
+
+function exportSheetCsv(sheetName) {
+  const sheet = getSheet_(sheetName);
+  const data = sheet.getDataRange().getValues();
+  const csv = data.map(row => row.map(val => {
+    if (val instanceof Date) {
+      val = Utilities.formatDate(val, 'UTC', "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    }
+    val = String(val || '').replace(/"/g, '""');
+    return /[",\n]/.test(val) ? `"${val}"` : val;
+  }).join(',')).join('\r\n');
+  const blob = Utilities.newBlob(csv, 'text/csv', `${sheetName}.csv`);
+  const file = DriveApp.createFile(blob);
+  SpreadsheetApp.flush();
+  return { url: file.getUrl(), name: file.getName(), id: file.getId() };
+}
