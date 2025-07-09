@@ -1007,6 +1007,7 @@
                 <button id="nav5" onclick="abrirTab(5)"><i class="fa fa-tasks"></i> Tarefas</button>
                 <button id="nav6" onclick="abrirTab(6)"><i class="fa fa-hand-holding-dollar"></i> Financeiro</button>
                 <button id="nav7" onclick="abrirTab(7)"><i class="fa fa-users"></i> Casos por Clientes</button>
+                <button id="nav8" onclick="abrirTab(8)"><i class="fa fa-chart-line"></i> Análises Gráficas</button>
             </nav>
             <button id="btnLogout" class="btn" style="background: #fff1f3; color:#d43c5e;">Sair <i
                     class="fa fa-sign-out-alt"></i></button>
@@ -1022,6 +1023,7 @@
                 <button id="nav5-sidebar" onclick="abrirTab(5); closeSidebar();"><i class="fa fa-tasks"></i> Tarefas</button>
                 <button id="nav6-sidebar" onclick="abrirTab(6); closeSidebar();"><i class="fa fa-hand-holding-dollar"></i> Financeiro</button>
                 <button id="nav7-sidebar" onclick="abrirTab(7); closeSidebar();"><i class="fa fa-users"></i> Casos por Clientes</button>
+                <button id="nav8-sidebar" onclick="abrirTab(8); closeSidebar();"><i class="fa fa-chart-line"></i> Análises Gráficas</button>
             </nav>
         </aside>
 
@@ -1189,6 +1191,11 @@
                         onkeyup="renderCasosPorCliente()">
                 </div>
                 <div id="casos-por-cliente-container"></div>
+            </div>
+
+            <!-- TAB: ANÁLISES GRÁFICAS -->
+            <div class="tab-content" id="tab8">
+                <div id="chart-relatorio"></div>
             </div>
         </main>
     </div>
@@ -1950,7 +1957,7 @@
         }
 
         /* ------------- LISTA DE FUNÇÕES DE RENDERIZAÇÃO ------------- */
-        const renderFunctions = [loadDashboard, renderCasos, renderClientes, renderDocumentos, renderAgenda, renderTarefas, loadFinanceiro, renderCasosPorCliente];
+        const renderFunctions = [loadDashboard, renderCasos, renderClientes, renderDocumentos, renderAgenda, renderTarefas, loadFinanceiro, renderCasosPorCliente, loadRelatorios];
 
         /* ------------- UI & NAVEGAÇÃO ------------- */
         function abrirTab(index) {
