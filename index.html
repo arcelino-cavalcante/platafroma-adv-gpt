@@ -277,6 +277,9 @@
             #painel-cards {
                 grid-template-columns: repeat(2, 1fr);
             }
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            }
         }
 
         #resumo-financeiro.painel-cards {
@@ -856,9 +859,6 @@
                 margin-top: 1rem;
             }
 
-            .card .value {
-                font-size: 1.5rem; /* Reduzido para caber melhor */
-            }
         }
 
         /* Otimização do layout do dashboard-grid */
