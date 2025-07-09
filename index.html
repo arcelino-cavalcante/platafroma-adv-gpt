@@ -742,6 +742,21 @@
             border-color: var(--warning);
         }
 
+        .fc .fc-event.prioridade-alta {
+            background-color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .fc .fc-event.prioridade-media {
+            background-color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .fc .fc-event.prioridade-baixa {
+            background-color: var(--info);
+            border-color: var(--info);
+        }
+
         .calendar-container {
             display: block;
         }
@@ -1487,9 +1502,41 @@
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
                 },
-                eventOrder: 'start,title', // Ordena eventos por data/hora de início e depois por título
+                eventOrder: 'start,title',
                 events: async (fetchInfo, successCallback, failureCallback) => {
-                    successCallback([]); // agenda desativada
+                    try {
+                        const [agenda, tarefas] = await Promise.all([
+                            gsGetRows('agenda'),
+                            gsGetRows('tarefas')
+                        ]);
+                        const events = [];
+                        (agenda || []).forEach(ev => {
+                            if (!ev.datahora) return;
+                            const statusClass = (ev.status || '').toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+                            events.push({
+                                id: ev.id,
+                                title: ev.titulo,
+                                start: ev.datahora,
+                                extendedProps: { ...ev, type: 'agenda' },
+                                classNames: [`status-${statusClass}`]
+                            });
+                        });
+                        (tarefas || []).forEach(t => {
+                            if (!t.prazo) return;
+                            const prioClass = (t.prioridade || '').toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+                            events.push({
+                                id: t.id,
+                                title: t.descricao,
+                                start: t.prazo,
+                                extendedProps: { ...t, type: 'tarefa' },
+                                classNames: [`prioridade-${prioClass}`]
+                            });
+                        });
+                        successCallback(events);
+                    } catch (e) {
+                        console.error('Erro ao carregar eventos:', e);
+                        failureCallback(e);
+                    }
                 },
                 eventClick: function (info) {
                     if (info.event.extendedProps.type === 'agenda') {
@@ -1500,8 +1547,14 @@
                 },
                 eventContent: function(arg) {
                     let eventDetails = document.createElement('div');
-                    let statusBadge = arg.event.extendedProps.status ? `<span class="badge ${arg.event.extendedProps.status}">${arg.event.extendedProps.status}</span>` : '';
-                    let typeBadge = arg.event.extendedProps.tipo_evento ? `<span class="badge">${arg.event.extendedProps.tipo_evento}</span>` : '';
+                    let badges = '';
+                    if (arg.event.extendedProps.type === 'agenda') {
+                        if (arg.event.extendedProps.status) badges += `<span class="badge ${arg.event.extendedProps.status}">${arg.event.extendedProps.status}</span>`;
+                        if (arg.event.extendedProps.tipo_evento) badges += `<span class="badge">${arg.event.extendedProps.tipo_evento}</span>`;
+                    } else if (arg.event.extendedProps.type === 'tarefa') {
+                        if (arg.event.extendedProps.prioridade) badges += `<span class="badge ${arg.event.extendedProps.prioridade}">${arg.event.extendedProps.prioridade}</span>`;
+                        if (arg.event.extendedProps.status) badges += `<span class="badge ${arg.event.extendedProps.status}">${arg.event.extendedProps.status}</span>`;
+                    }
 
                     eventDetails.innerHTML = `
                         <div class="fc-event-main-frame">
@@ -1510,8 +1563,7 @@
                             </div>
                         </div>
                         <div class="fc-event-details">
-                            ${statusBadge}
-                            ${typeBadge}
+                            ${badges}
                         </div>
                     `;
                     return { domNodes: [eventDetails] };
