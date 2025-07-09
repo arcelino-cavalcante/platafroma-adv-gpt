@@ -591,6 +591,41 @@
             padding-bottom: .5rem;
         }
 
+        #casos-por-cliente-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .cliente-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+
+        .cliente-card li {
+            background: var(--accent-light);
+            padding: .5rem .8rem;
+            border-radius: .5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex: 1 1 100%;
+        }
+
+        .cliente-card li .badge {
+            margin-left: .5rem;
+        }
+
+        @media (min-width: 600px) {
+            .cliente-card li {
+                flex: 1 1 calc(50% - .5rem);
+            }
+        }
+
         .spinner {
             width: 50px;
             height: 50px;
@@ -1748,7 +1783,7 @@
                 const html = filtered.map(cl => {
                     const casosCliente = casos.filter(c => c.cliente_id == cl.id);
                     if (!casosCliente.length) return '';
-                    return `<div class="cliente-card"><h3>${cl.nome}</h3><ul>${casosCliente.map(c => `<li>${c.numero} - <span class="badge ${c.status}">${c.status}</span></li>`).join('')}</ul></div>`;
+                    return `<div class="cliente-card"><h3>${cl.nome}</h3><ul>${casosCliente.map(c => `<li><span>${c.numero}</span><span class="badge ${c.status}">${c.status}</span></li>`).join('')}</ul></div>`;
                 }).join('');
                 container.innerHTML = html || '<p style="text-align:center; padding: 2rem;">Nenhum resultado encontrado.</p>';
             } catch (e) {
