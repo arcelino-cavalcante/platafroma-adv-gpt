@@ -75,10 +75,11 @@ Caso deseje servir o arquivo `index.html` a partir do GitHub Pages em vez de uti
        default:
          result = { error: 'Ação inválida' };
      }
-     return ContentService
-       .createTextOutput(JSON.stringify(result))
-       .setMimeType(ContentService.MimeType.JSON)
-       .setHeader('Access-Control-Allow-Origin', '*');
+       return ContentService
+         .createTextOutput(JSON.stringify(result))
+         .setMimeType(ContentService.MimeType.JSON)
+         .setHeader('Access-Control-Allow-Origin', '*')
+         .setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
    }
    ```
 
