@@ -97,7 +97,7 @@ Caso deseje servir o arquivo `index.html` a partir do GitHub Pages em vez de uti
      return fetch(API_URL, {
        method: 'POST',
        body: JSON.stringify({ action, args }),
-       headers: { 'Content-Type': 'application/json' }
+       headers: { 'Content-Type': 'text/plain' }
      }).then(r => r.json());
    }
    ```
