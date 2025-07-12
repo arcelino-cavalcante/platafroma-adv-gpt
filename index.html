@@ -1059,10 +1059,34 @@
                 width: 200px;
             }
         }
+
+        /* Aviso para telas muito pequenas */
+        #mobile-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #d43c5e;
+            color: #fff;
+            text-align: center;
+            z-index: 1100;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            nav button,
+            .sidebar-nav button {
+                font-size: 1.1rem;
+            }
+        }
     </style>
 </head>
 
 <body>
+
+    <div id="mobile-warning">Recomendamos o uso em notebooks ou computadores para melhor experiência.</div>
 
     <div id="login-panel">
         <h2><i class="fa-solid fa-scale-balanced"></i> Login do Advogado</h2>
@@ -2447,6 +2471,15 @@
             overlay.classList.remove('active');
         }
 
+        function checkScreenSize() {
+            const warning = document.getElementById('mobile-warning');
+            if (window.innerWidth < 768) {
+                warning.style.display = 'flex';
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+
         /* ------------- INICIALIZAÇÃO ------------- */
         document.addEventListener('DOMContentLoaded', () => {
             // Event listeners para login, etc.
@@ -2456,6 +2489,7 @@
 
             // Checa a sessão do usuário ao carregar
             checkUserSession();
+            checkScreenSize();
 
             // Fecha modais ao clicar no fundo
             $$('.modal-bg').forEach(bg => {
@@ -2466,6 +2500,8 @@
                 });
             });
         });
+
+        window.addEventListener('resize', checkScreenSize);
 
         /* ------------- AUTENTICAÇÃO ------------- */
         function checkUserSession() {
