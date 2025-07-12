@@ -55,6 +55,7 @@
             font-size: var(--fs-base);
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden; /* evita rolagem horizontal */
         }
 
         p {
@@ -220,6 +221,13 @@
         .filter-bar select {
             flex-grow: 1;
             min-width: 200px;
+        }
+
+        @media (max-width: 600px) {
+            .filter-bar input,
+            .filter-bar select {
+                min-width: 100%;
+            }
         }
 
         input,
@@ -948,8 +956,8 @@
         .sidebar {
             position: fixed;
             top: 0;
-            left: -250px;
-            width: 250px;
+            left: calc(-1 * clamp(230px, 75vw, 260px));
+            width: clamp(230px, 75vw, 260px); /* largura flexível */
             height: 100%;
             background: var(--main);
             padding-top: 60px;
@@ -997,6 +1005,7 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
             z-index: 999;
+            cursor: pointer;
         }
 
         .overlay.active {
@@ -1044,6 +1053,7 @@
 
             .modal {
                 width: 95%;
+                max-width: none;
                 padding: 4vw;
             }
 
@@ -1056,23 +1066,24 @@
             }
 
             .sidebar {
-                width: 200px;
+                width: 70vw; /* ocupa boa parte da tela no mobile */
             }
         }
 
-        /* Aviso para telas muito pequenas */
+        /* Aviso sutil para telas pequenas */
         #mobile-warning {
             display: none;
             position: fixed;
-            top: 0;
+            bottom: 0;
             left: 0;
             width: 100%;
-            padding: 0.75rem 1rem;
-            background: #d43c5e;
+            padding: 0.5rem 1rem;
+            background: rgba(212, 60, 94, 0.9);
             color: #fff;
             text-align: center;
             z-index: 1100;
-            font-size: 1rem;
+            font-size: 0.85rem;
+            pointer-events: none; /* nao impede interacoes */
         }
 
         @media (max-width: 768px) {
@@ -1636,14 +1647,13 @@
 
             // FullCalendar
             const calendarEl = $('#calendar');
+            const isMobile = window.innerWidth < 768;
             const calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth',
+                initialView: isMobile ? 'listWeek' : 'dayGridMonth',
                 locale: 'pt-br',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-                },
+                headerToolbar: isMobile ?
+                    { left: 'prev,next today', center: 'title', right: 'listWeek' } :
+                    { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
                 eventOrder: 'start,title',
                 events: async (fetchInfo, successCallback, failureCallback) => {
                     try {
@@ -1711,11 +1721,12 @@
                     return { domNodes: [eventDetails] };
                 },
                 windowResize: function(view) {
-                    if (window.innerWidth < 768) {
-                        calendar.changeView('listWeek');
-                    } else {
-                        calendar.changeView('dayGridMonth');
-                    }
+                    const mobile = window.innerWidth < 768;
+                    calendar.changeView(mobile ? 'listWeek' : 'dayGridMonth');
+                    calendar.setOption('headerToolbar', mobile ?
+                        { left: 'prev,next today', center: 'title', right: 'listWeek' } :
+                        { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' }
+                    );
                 }
             });
             calendar.render();
@@ -2466,6 +2477,12 @@
             overlay.classList.remove('active');
         });
 
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+            }
+        });
+
         function closeSidebar() {
             sidebar.classList.remove('active');
             overlay.classList.remove('active');
@@ -2474,7 +2491,7 @@
         function checkScreenSize() {
             const warning = document.getElementById('mobile-warning');
             if (window.innerWidth < 768) {
-                warning.style.display = 'flex';
+                warning.style.display = 'block';
             } else {
                 warning.style.display = 'none';
             }
