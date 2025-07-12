@@ -164,3 +164,38 @@ function exportSheetCsv(sheetName) {
   return { url: file.getUrl(), name: file.getName(), id: file.getId() };
 }
 
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents || '{}');
+  const { action, args } = data;
+  let result;
+  switch (action) {
+    case 'getRows':
+      result = getRows(args.sheet);
+      break;
+    case 'addRow':
+      result = addRow(args.sheet, args.row);
+      break;
+    case 'updateRow':
+      result = updateRow(args.sheet, args.id, args.row);
+      break;
+    case 'deleteRow':
+      result = deleteRow(args.sheet, args.id);
+      break;
+    case 'uploadDocument':
+      result = uploadDocument(args.name, args.base64);
+      break;
+    case 'login':
+      result = login(args.email, args.senha);
+      break;
+    case 'exportSheetCsv':
+      result = exportSheetCsv(args.sheet);
+      break;
+    default:
+      result = { error: 'Ação inválida' };
+  }
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader('Access-Control-Allow-Origin', '*');
+}
+
