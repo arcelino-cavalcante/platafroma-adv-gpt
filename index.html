@@ -1517,43 +1517,40 @@
         const $$ = (s) => document.querySelectorAll(s);
 
         // -- CONFIGURAÇÃO DO APPS SCRIPT --
-        // As operações de dados são realizadas por funções server-side em Code.gs
+        // URL do Web App publicado (substitua pela sua)
+        const API_URL = 'COLE_AQUI_SUA_URL_DO_WEB_APP';
+
+        // Helper para chamar a API do Apps Script via fetch
+        function api(action, args) {
+            return fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action, args }),
+                headers: { 'Content-Type': 'application/json' }
+            }).then(r => r.json());
+        }
+
         function gsGetRows(sheet) {
-            return new Promise((res, rej) => {
-                google.script.run.withSuccessHandler(data => {
-                    res(Array.isArray(data) ? data : []);
-                }).withFailureHandler(rej).getRows(sheet);
-            });
+            return api('getRows', { sheet });
         }
 
         function gsAddRow(sheet, row) {
-            return new Promise((res, rej) => {
-                google.script.run.withSuccessHandler(res).withFailureHandler(rej).addRow(sheet, row);
-            });
+            return api('addRow', { sheet, row });
         }
 
         function gsDeleteRow(sheet, id) {
-            return new Promise((res, rej) => {
-                google.script.run.withSuccessHandler(res).withFailureHandler(rej).deleteRow(sheet, id);
-            });
+            return api('deleteRow', { sheet, id });
         }
 
         function gsUpdateRow(sheet, id, row) {
-            return new Promise((res, rej) => {
-                google.script.run.withSuccessHandler(res).withFailureHandler(rej).updateRow(sheet, id, row);
-            });
+            return api('updateRow', { sheet, id, row });
         }
 
         function gsUploadDocument(name, base64) {
-            return new Promise((res, rej) => {
-                google.script.run.withSuccessHandler(res).withFailureHandler(rej).uploadDocument(name, base64);
-            });
+            return api('uploadDocument', { name, base64 });
         }
 
         function gsLogin(email, senha) {
-            return new Promise((res, rej) => {
-                google.script.run.withSuccessHandler(res).withFailureHandler(rej).login(email, senha);
-            });
+            return api('login', { email, senha });
         }
 
 
@@ -2443,7 +2440,7 @@
 
         function exportarDados(tableName) {
             showNotif('info', 'Gerando CSV, aguarde...');
-            google.script.run.withSuccessHandler(res => {
+            api('exportSheetCsv', { sheet: tableName }).then(res => {
                 if (res && res.url) {
                     const a = document.createElement('a');
                     a.href = res.url;
@@ -2456,10 +2453,10 @@
                 } else {
                     showNotif('danger', 'Falha ao gerar arquivo.');
                 }
-            }).withFailureHandler(e => {
+            }).catch(e => {
                 showNotif('danger', 'Erro: ' + e.message);
                 console.error(e);
-            }).exportSheetCsv(tableName);
+            });
         }
 
         /* ------------- CONTROLE DO SIDEBAR ------------- */
