@@ -134,20 +134,6 @@ function uploadDocument(name, base64) {
   return { id: file.getId(), name: file.getName(), url: file.getUrl() };
 }
 
-function login(email, senha) {
-  const sheet = getSheet_('user');
-  const data = sheet.getDataRange().getValues();
-  const rawHeaders = data.shift();
-  const headers = rawHeaders.map(h => String(h).toLowerCase());
-  const emailIdx = headers.indexOf('email');
-  const senhaIdx = headers.indexOf('senha');
-  if (emailIdx === -1 || senhaIdx === -1) {
-    throw new Error('Sheet "user" must have columns "email" and "senha"');
-  }
-  const ok = data.some(row => row[emailIdx] == email && row[senhaIdx] == senha);
-  return { success: ok };
-}
-
 function exportSheetCsv(sheetName) {
   const sheet = getSheet_(sheetName);
   const data = sheet.getDataRange().getValues();
@@ -183,9 +169,6 @@ function doPost(e) {
       break;
     case 'uploadDocument':
       result = uploadDocument(args.name, args.base64);
-      break;
-    case 'login':
-      result = login(args.email, args.senha);
       break;
     case 'exportSheetCsv':
       result = exportSheetCsv(args.sheet);

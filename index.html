@@ -1111,10 +1111,6 @@
         </div>
         <button id="btnLogin" class="btn" style="width: 100%;">Entrar</button>
         <div id="login-erro"></div>
-        <p style="text-align:center; margin-top:1.8rem; font-size: var(--fs-base); color:#666;">
-            Primeiro acesso? <a href="#" id="btnCriarConta" style="color:var(--accent); font-weight:600;">Criar
-                conta</a>
-        </p>
     </div>
 
     <div id="app" style="display:none">
@@ -1508,6 +1504,18 @@
     <!-- Google Apps Script runtime already provides google.script.run -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+    </script>
     <script>
         // =================================================================================
         // PAINEL JURÍDICO - SCRIPT COMPLETO (Versão Supabase) - SPINNERS
@@ -1547,10 +1555,6 @@
 
         function gsUploadDocument(name, base64) {
             return api('uploadDocument', { name, base64 });
-        }
-
-        function gsLogin(email, senha) {
-            return api('login', { email, senha });
         }
 
 
@@ -2499,10 +2503,10 @@
             // Event listeners para login, etc.
             $('#btnLogin').addEventListener('click', handleLogin);
             $('#btnLogout').addEventListener('click', handleLogout);
-            $('#btnCriarConta').addEventListener('click', () => showNotif('info', 'Funcionalidade de criar conta ainda não implementada.'));
 
             // Checa a sessão do usuário ao carregar
             checkUserSession();
+            auth.onAuthStateChanged(checkUserSession);
             checkScreenSize();
 
             // Fecha modais ao clicar no fundo
@@ -2519,8 +2523,8 @@
 
         /* ------------- AUTENTICAÇÃO ------------- */
         function checkUserSession() {
-            const logged = localStorage.getItem('userLoggedIn') === '1';
-            if (logged) {
+            const user = auth.currentUser;
+            if (user) {
                 $('#login-panel').style.display = 'none';
                 $('#app').style.display = 'block';
                 abrirTab(0);
@@ -2534,24 +2538,16 @@
             const email = $('#login-email').value;
             const password = $('#login-senha').value;
             try {
-                const { success } = await gsLogin(email, password);
-                if (success) {
-                    localStorage.setItem('userLoggedIn', '1');
-                    $('#login-erro').style.display = 'none';
-                    checkUserSession();
-                } else {
-                    $('#login-erro').innerText = 'E-mail ou senha inválidos.';
-                    $('#login-erro').style.display = 'block';
-                }
+                await auth.signInWithEmailAndPassword(email, password);
+                $('#login-erro').style.display = 'none';
             } catch (e) {
-                $('#login-erro').innerText = 'Erro ao autenticar.';
+                $('#login-erro').innerText = 'E-mail ou senha inválidos.';
                 $('#login-erro').style.display = 'block';
             }
         }
 
         function handleLogout() {
-            localStorage.removeItem('userLoggedIn');
-            checkUserSession();
+            auth.signOut();
         }
 
     </script>
