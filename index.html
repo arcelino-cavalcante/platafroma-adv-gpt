@@ -1504,10 +1504,9 @@
     <!-- Google Apps Script runtime already provides google.script.run -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
         const firebaseConfig = {
             apiKey: "AIzaSyBlQ82VwKC5DWScw0DmMOfoG8B5OHc9v1w",
             authDomain: "banco-de-dados-adv.firebaseapp.com",
@@ -1516,10 +1515,8 @@
             messagingSenderId: "948017779164",
             appId: "1:948017779164:web:fd97b016849af7eb337f19"
         };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-    </script>
-    <script>
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         // =================================================================================
         // PAINEL JURÍDICO - SCRIPT COMPLETO (Versão Supabase) - SPINNERS
         // =================================================================================
@@ -2509,7 +2506,7 @@
 
             // Checa a sessão do usuário ao carregar
             checkUserSession();
-            auth.onAuthStateChanged(checkUserSession);
+            onAuthStateChanged(auth, checkUserSession);
             checkScreenSize();
 
             // Fecha modais ao clicar no fundo
@@ -2541,7 +2538,7 @@
             const email = $('#login-email').value;
             const password = $('#login-senha').value;
             try {
-                await auth.signInWithEmailAndPassword(email, password);
+                await signInWithEmailAndPassword(auth, email, password);
                 $('#login-erro').style.display = 'none';
             } catch (e) {
                 $('#login-erro').innerText = 'E-mail ou senha inválidos.';
@@ -2550,7 +2547,7 @@
         }
 
         function handleLogout() {
-            auth.signOut();
+            signOut(auth);
         }
 
     </script>
