@@ -2544,7 +2544,12 @@
                 await auth.signInWithEmailAndPassword(email, password);
                 $('#login-erro').style.display = 'none';
             } catch (e) {
-                $('#login-erro').innerText = 'E-mail ou senha inválidos.';
+                console.error('Erro ao fazer login:', e);
+                let msg = 'E-mail ou senha inválidos.';
+                if (e && e.message && /API key/i.test(e.message)) {
+                    msg = 'Chave da API do Firebase inválida. Verifique a configuração.';
+                }
+                $('#login-erro').innerText = msg;
                 $('#login-erro').style.display = 'block';
             }
         }
