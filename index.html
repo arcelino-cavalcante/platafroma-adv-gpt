@@ -1507,6 +1507,8 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
+        import { getStorage, ref, uploadString, getDownloadURL } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js';
         const firebaseConfig = {
           apiKey: "AIzaSyBlQ82VwKC5DWScw0DmMOfoG8B5OHc9v1w",
           authDomain: "banco-de-dados-adv.firebaseapp.com",
@@ -1517,44 +1519,41 @@
         };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
         // =================================================================================
-        // PAINEL JURÍDICO - SCRIPT COMPLETO (Versão Supabase) - SPINNERS
+        // PAINEL JURÍDICO - SCRIPT COMPLETO (Versão Firebase) - SPINNERS
         // =================================================================================
 
         const $ = (s) => document.querySelector(s);
         const $$ = (s) => document.querySelectorAll(s);
 
-        // -- CONFIGURAÇÃO DO APPS SCRIPT --
-        // URL do Web App publicado (substitua pela sua)
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwF-zYsvt3aXdoFCto2tXsTznwfOZG4kYw4mfimAHDlCBaQkfX1yPvjsmKYyxa1_0blOA/exec';
-
-        // Helper para chamar a API do Apps Script via fetch
-        function api(action, args) {
-            return fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action, args }),
-                headers: { 'Content-Type': 'text/plain' }
-            }).then(r => r.json());
+        async function gsGetRows(collectionName) {
+            const snap = await getDocs(collection(db, collectionName));
+            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
         }
 
-        function gsGetRows(sheet) {
-            return api('getRows', { sheet });
+        async function gsAddRow(collectionName, row) {
+            const docRef = await addDoc(collection(db, collectionName), row);
+            await updateDoc(doc(db, collectionName, docRef.id), { id: docRef.id });
+            return { success: true };
         }
 
-        function gsAddRow(sheet, row) {
-            return api('addRow', { sheet, row });
+        async function gsDeleteRow(collectionName, id) {
+            await deleteDoc(doc(db, collectionName, id));
+            return { success: true };
         }
 
-        function gsDeleteRow(sheet, id) {
-            return api('deleteRow', { sheet, id });
+        async function gsUpdateRow(collectionName, id, row) {
+            await updateDoc(doc(db, collectionName, id), row);
+            return { success: true };
         }
 
-        function gsUpdateRow(sheet, id, row) {
-            return api('updateRow', { sheet, id, row });
-        }
-
-        function gsUploadDocument(name, base64) {
-            return api('uploadDocument', { name, base64 });
+        async function gsUploadDocument(name, base64) {
+            const storageRef = ref(storage, `docs/${Date.now()}_${name}`);
+            await uploadString(storageRef, base64, 'base64');
+            const url = await getDownloadURL(storageRef);
+            return { id: storageRef.fullPath, name, url };
         }
 
 
@@ -2442,25 +2441,30 @@
             }
         }
 
-        function exportarDados(tableName) {
+        async function exportarDados(tableName) {
             showNotif('info', 'Gerando CSV, aguarde...');
-            api('exportSheetCsv', { sheet: tableName }).then(res => {
-                if (res && res.url) {
-                    const a = document.createElement('a');
-                    a.href = res.url;
-                    a.download = `${tableName}.csv`;
-                    a.target = '_blank';
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    showNotif('success', 'Arquivo pronto para download.');
-                } else {
-                    showNotif('danger', 'Falha ao gerar arquivo.');
-                }
-            }).catch(e => {
-                showNotif('danger', 'Erro: ' + e.message);
+            try {
+                const rows = await gsGetRows(tableName);
+                if (!rows.length) throw new Error('Sem dados');
+                const headers = Object.keys(rows[0]);
+                const csvRows = [headers.join(',')];
+                rows.forEach(r => {
+                    csvRows.push(headers.map(h => `"${String(r[h] || '').replace(/"/g, '""')}"`).join(','));
+                });
+                const blob = new Blob([csvRows.join('\r\n')], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${tableName}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                showNotif('success', 'Arquivo pronto para download.');
+            } catch (e) {
+                showNotif('danger', 'Falha ao gerar arquivo.');
                 console.error(e);
-            });
+            }
         }
 
         /* ------------- CONTROLE DO SIDEBAR ------------- */
