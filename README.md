@@ -7,16 +7,17 @@ e os documentos ficam em uma pasta no Google Drive.
 ## Configuração
 1. Crie uma planilha no Google Sheets contendo as abas `clientes`, `casos`,
    `docs`, `agenda`, `tarefas` e `fin`.
-   - Adicione também a aba `user` com as colunas `email` e `senha` para definir
-     quem pode acessar o sistema.
    - Na aba `clientes`, utilize as colunas `id`, `nome`, `email`, `fone` e
      `notas` exatamente nesses nomes (em letras minúsculas). O script considera
      os cabeçalhos em minúsculas para salvar e ler os dados.
 2. Crie uma pasta no Google Drive para os arquivos enviados.
-3. No editor do Apps Script, abra **Arquivo > Propriedades do projeto** e, na
+3. Configure um projeto no Firebase e habilite a autenticação por e-mail e
+   senha. Copie as chaves do projeto e preencha o objeto `firebaseConfig` em
+   `index.html`.
+4. No editor do Apps Script, abra **Arquivo > Propriedades do projeto** e, na
    aba **Propriedades do Script**, adicione `SPREADSHEET_ID` e
    `DOCS_FOLDER_ID` com os respectivos IDs.
-4. Publique o projeto como aplicativo da Web ou use a extensão do Apps Script
+5. Publique o projeto como aplicativo da Web ou use a extensão do Apps Script
    para serviço de backend.
 
 Ao carregar os dados dos documentos, o script verifica a pasta indicada em
@@ -27,8 +28,6 @@ pasta apareçam no painel.
 ## Estrutura das abas
 O sistema espera que cada aba da planilha possua as seguintes colunas (todas em
 letras minúsculas):
-
-- **user**: `email`, `senha`
 - **clientes**: `id`, `nome`, `email`, `fone`, `notas`
 - **casos**: `id`, `cliente_id`, `numero`, `partes`, `responsavel`, `data`, `status`
 - **docs**: `id`, `cliente_id`, `caso_id`, `titulo`, `file_id`, `file_nome`, `file_url`
@@ -63,12 +62,9 @@ Caso deseje servir o arquivo `index.html` a partir do GitHub Pages em vez de uti
        case 'deleteRow':
          result = deleteRow(args.sheet, args.id);
          break;
-       case 'uploadDocument':
-         result = uploadDocument(args.name, args.base64);
-         break;
-       case 'login':
-         result = login(args.email, args.senha);
-         break;
+      case 'uploadDocument':
+        result = uploadDocument(args.name, args.base64);
+        break;
        case 'exportSheetCsv':
          result = exportSheetCsv(args.sheet);
          break;
