@@ -11,9 +11,9 @@ e os documentos ficam em uma pasta no Google Drive.
      `notas` exatamente nesses nomes (em letras minúsculas). O script considera
      os cabeçalhos em minúsculas para salvar e ler os dados.
 2. Crie uma pasta no Google Drive para os arquivos enviados.
-3. Configure um projeto no Firebase e habilite a autenticação por e-mail e
-   senha. Copie as chaves do projeto e preencha o objeto `firebaseConfig` em
-   `index.html`.
+3. Configure um projeto no Firebase, habilite a autenticação por e-mail e
+   senha e crie os usuários diretamente no console do Firebase. Copie as
+   chaves do projeto e preencha o objeto `firebaseConfig` em `index.html`.
 4. No editor do Apps Script, abra **Arquivo > Propriedades do projeto** e, na
    aba **Propriedades do Script**, adicione `SPREADSHEET_ID` e
    `DOCS_FOLDER_ID` com os respectivos IDs.
